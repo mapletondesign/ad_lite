@@ -9,6 +9,17 @@ AdPack is a digital out-of-home advertising network that places billboard-qualit
 
 ---
 
+## Locked Decisions (2026-05-01)
+
+| Decision | Choice |
+|---|---|
+| Backend language | Go |
+| Pricing model v1 | Time-slot flat rate |
+| Pricing model v2 | CPM (added once impression tracking is solid) |
+| Hardware | Raspberry Pi 5 (4GB) for dev and pilot |
+
+---
+
 ## Stage Breakdown
 
 ---
