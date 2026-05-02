@@ -1,6 +1,10 @@
 package devices
 
-import "time"
+import (
+	"time"
+
+	"github.com/mapletondesign/ad_pack/internal/scheduler"
+)
 
 type Device struct {
 	ID              string     `json:"id"`
@@ -30,6 +34,6 @@ type HeartbeatRequest struct {
 }
 
 type HeartbeatResponse struct {
-	Status   string `json:"status"`
-	Playlist []any  `json:"playlist"` // populated once scheduler is wired in
+	Status   string            `json:"status"`
+	Playlist []scheduler.AdItem `json:"playlist"`
 }

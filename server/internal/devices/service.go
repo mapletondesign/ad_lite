@@ -7,14 +7,16 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/mapletondesign/ad_pack/internal/scheduler"
 )
 
 type Service struct {
-	db *pgxpool.Pool
+	db        *pgxpool.Pool
+	scheduler *scheduler.Service
 }
 
-func NewService(db *pgxpool.Pool) *Service {
-	return &Service{db: db}
+func NewService(db *pgxpool.Pool, sched *scheduler.Service) *Service {
+	return &Service{db: db, scheduler: sched}
 }
 
 func (s *Service) Register(ctx context.Context, req RegisterRequest) (RegisterResponse, error) {
@@ -49,7 +51,13 @@ func (s *Service) Heartbeat(ctx context.Context, deviceID string, req HeartbeatR
 		return HeartbeatResponse{}, fmt.Errorf("device not found")
 	}
 
-	return HeartbeatResponse{Status: "ok", Playlist: []any{}}, nil
+	playlist, err := s.scheduler.PlaylistForDevice(ctx, deviceID)
+	if err != nil {
+		// A scheduler failure should not take the device offline — return empty playlist.
+		playlist = []scheduler.AdItem{}
+	}
+
+	return HeartbeatResponse{Status: "ok", Playlist: playlist}, nil
 }
 
 func (s *Service) List(ctx context.Context) ([]Device, error) {

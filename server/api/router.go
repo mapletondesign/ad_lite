@@ -9,7 +9,9 @@ import (
 	chimw "github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/mapletondesign/ad_pack/api/middleware"
+	"github.com/mapletondesign/ad_pack/internal/bookings"
 	"github.com/mapletondesign/ad_pack/internal/devices"
+	"github.com/mapletondesign/ad_pack/internal/scheduler"
 	"github.com/mapletondesign/ad_pack/internal/slots"
 	"github.com/redis/go-redis/v9"
 )
@@ -21,11 +23,15 @@ func NewRouter(db *pgxpool.Pool, rdb *redis.Client) http.Handler {
 	r.Use(middleware.Logger)
 	r.Use(chimw.RequestID)
 
-	deviceSvc := devices.NewService(db)
+	schedSvc := scheduler.NewService(db)
+	deviceSvc := devices.NewService(db, schedSvc)
 	deviceHandler := devices.NewHandler(deviceSvc)
 
 	slotSvc := slots.NewService(db)
 	slotHandler := slots.NewHandler(slotSvc)
+
+	bookingSvc := bookings.NewService(db)
+	bookingHandler := bookings.NewHandler(bookingSvc)
 
 	r.Get("/health", healthHandler(db, rdb))
 
@@ -42,7 +48,8 @@ func NewRouter(db *pgxpool.Pool, rdb *redis.Client) http.Handler {
 			r.Patch("/{id}", slotHandler.Update)
 		})
 		r.Route("/bookings", func(r chi.Router) {
-			r.Post("/", stubHandler("booking creation — coming in Stage 6"))
+			r.Post("/", bookingHandler.Create)
+			r.Get("/", bookingHandler.List)
 		})
 		r.Route("/analytics", func(r chi.Router) {
 			r.Get("/impressions", stubHandler("impression reporting — coming in Stage 2"))
