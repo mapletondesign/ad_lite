@@ -10,6 +10,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/mapletondesign/ad_pack/api/middleware"
 	"github.com/mapletondesign/ad_pack/internal/devices"
+	"github.com/mapletondesign/ad_pack/internal/slots"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -23,6 +24,9 @@ func NewRouter(db *pgxpool.Pool, rdb *redis.Client) http.Handler {
 	deviceSvc := devices.NewService(db)
 	deviceHandler := devices.NewHandler(deviceSvc)
 
+	slotSvc := slots.NewService(db)
+	slotHandler := slots.NewHandler(slotSvc)
+
 	r.Get("/health", healthHandler(db, rdb))
 
 	r.Route("/api/v1", func(r chi.Router) {
@@ -32,9 +36,10 @@ func NewRouter(db *pgxpool.Pool, rdb *redis.Client) http.Handler {
 			r.Post("/{id}/heartbeat", deviceHandler.Heartbeat)
 		})
 
-		// Stubs — wired in as later stages are built
 		r.Route("/slots", func(r chi.Router) {
-			r.Get("/", stubHandler("ad slot listing — coming in Stage 6"))
+			r.Get("/", slotHandler.List)
+			r.Post("/", slotHandler.Create)
+			r.Patch("/{id}", slotHandler.Update)
 		})
 		r.Route("/bookings", func(r chi.Router) {
 			r.Post("/", stubHandler("booking creation — coming in Stage 6"))
