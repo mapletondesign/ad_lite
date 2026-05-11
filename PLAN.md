@@ -32,6 +32,19 @@ Venue screens (restaurants, offices, gyms) host a Raspberry Pi 5 running a kiosk
 
 ---
 
+## Infrastructure — Pre-Launch Requirements
+
+These must be completed before real devices go live. Slot into Stage 4 work.
+
+| Item | What | Priority |
+|---|---|---|
+| **Asset serving** | Move ad creatives to S3/Cloudflare R2. Serve via CloudFront or Cloudflare CDN. Remove local filesystem serving from Go server. S3 config is already in `.env.example`. | Critical |
+| **Auth** | JWT middleware on all API routes. Device tokens signed with RS256 (not random UUIDs). Advertiser/venue/admin roles via short-lived access tokens + refresh tokens. | Critical |
+| **Rate limiting** | Per-device rate limit on `/heartbeat` and `/impression` endpoints. Chi middleware, backed by Redis. Prevents misbehaving devices from flooding the API. | High |
+| **Redis caching** | Cache playlist results in Redis per device (TTL ~60s). Reduces Postgres load on every heartbeat. Redis is already connected but unused. | High |
+
+---
+
 ## Stage 4 — Web App (Nuxt.js / Vue 3)
 
 - **Advertiser portal:** campaign builder, creative upload, targeting (city/category/time), dashboard (impressions, spend)
