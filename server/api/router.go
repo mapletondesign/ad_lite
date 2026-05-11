@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"os"
 
 	"github.com/go-chi/chi/v5"
 	chimw "github.com/go-chi/chi/v5/middleware"
@@ -40,6 +41,7 @@ func NewRouter(db *pgxpool.Pool, rdb *redis.Client) http.Handler {
 			r.Post("/register", deviceHandler.Register)
 			r.Get("/", deviceHandler.List)
 			r.Post("/{id}/heartbeat", deviceHandler.Heartbeat)
+			r.Post("/{id}/impression", deviceHandler.Impression)
 		})
 
 		r.Route("/slots", func(r chi.Router) {
@@ -47,14 +49,24 @@ func NewRouter(db *pgxpool.Pool, rdb *redis.Client) http.Handler {
 			r.Post("/", slotHandler.Create)
 			r.Patch("/{id}", slotHandler.Update)
 		})
+
 		r.Route("/bookings", func(r chi.Router) {
 			r.Post("/", bookingHandler.Create)
 			r.Get("/", bookingHandler.List)
 		})
+
 		r.Route("/analytics", func(r chi.Router) {
-			r.Get("/impressions", stubHandler("impression reporting — coming in Stage 2"))
+			r.Get("/impressions", stubHandler("impression reporting — coming in Stage 4"))
 		})
 	})
+
+	// Serve ad creative assets uploaded to the server.
+	assetsDir := envOr("ASSETS_DIR", "./assets")
+	r.Handle("/assets/*", http.StripPrefix("/assets/", http.FileServer(http.Dir(assetsDir))))
+
+	// Serve the kiosk client app. Must be last — catches all remaining routes.
+	clientDir := envOr("CLIENT_DIR", "../client")
+	r.Handle("/*", http.FileServer(http.Dir(clientDir)))
 
 	return r
 }
@@ -87,4 +99,11 @@ func stubHandler(msg string) http.HandlerFunc {
 		w.WriteHeader(http.StatusNotImplemented)
 		json.NewEncoder(w).Encode(map[string]string{"message": msg})
 	}
+}
+
+func envOr(key, fallback string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return fallback
 }

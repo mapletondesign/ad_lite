@@ -33,6 +33,11 @@ type HeartbeatRequest struct {
 	FirmwareVersion string `json:"firmware_version"`
 }
 
+type ImpressionRequest struct {
+	BookingID string `json:"booking_id"`
+	PlayedAt  int64  `json:"played_at"` // unix timestamp from client
+}
+
 type HeartbeatResponse struct {
 	Status   string            `json:"status"`
 	Playlist []scheduler.AdItem `json:"playlist"`

@@ -54,6 +54,20 @@ func (h *Handler) Heartbeat(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, resp)
 }
 
+func (h *Handler) Impression(w http.ResponseWriter, r *http.Request) {
+	deviceID := chi.URLParam(r, "id")
+	var req ImpressionRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+	if err := h.svc.RecordImpression(r.Context(), deviceID, req); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusCreated, map[string]string{"status": "recorded"})
+}
+
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	devices, err := h.svc.List(r.Context())
 	if err != nil {

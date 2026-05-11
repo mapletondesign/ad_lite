@@ -1,0 +1,128 @@
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: #000;
+  font-family: system-ui, sans-serif;
+}
+
+/* ── Player ─────────────────────────────────────── */
+
+#player {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+}
+
+#player.hidden { display: none; }
+
+#ad-image,
+#ad-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+#ad-image.active,
+#ad-video.active { opacity: 1; }
+
+/* Status dot — top-right corner */
+#status-dot {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #555;
+  transition: background 0.4s;
+  z-index: 10;
+}
+#status-dot.playing { background: #22c55e; }  /* green  */
+#status-dot.waiting { background: #eab308; }  /* yellow */
+#status-dot.error   { background: #ef4444; }  /* red    */
+
+/* ── Setup screen ────────────────────────────────── */
+
+#setup {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: #0f0f0f;
+}
+
+#setup.hidden { display: none; }
+
+.setup-card {
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  padding: 40px;
+  width: 460px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  color: #e5e5e5;
+}
+
+.setup-card h1 {
+  font-size: 22px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.setup-card p {
+  font-size: 14px;
+  color: #aaa;
+  line-height: 1.5;
+}
+
+.setup-card input {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  background: #111;
+  color: #fff;
+  font-size: 13px;
+  font-family: monospace;
+  outline: none;
+}
+
+.setup-card input:focus { border-color: #555; }
+
+.setup-card button {
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  background: #fff;
+  color: #000;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.setup-card button:hover { background: #e5e5e5; }
+
+.hint {
+  font-size: 12px;
+  color: #555;
+}
+
+.hint code {
+  font-family: monospace;
+  background: #222;
+  padding: 2px 6px;
+  border-radius: 4px;
+}

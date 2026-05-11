@@ -60,6 +60,21 @@ func (s *Service) Heartbeat(ctx context.Context, deviceID string, req HeartbeatR
 	return HeartbeatResponse{Status: "ok", Playlist: playlist}, nil
 }
 
+func (s *Service) RecordImpression(ctx context.Context, deviceID string, req ImpressionRequest) error {
+	if req.BookingID == "" {
+		return fmt.Errorf("booking_id is required")
+	}
+	_, err := s.db.Exec(ctx, `
+		INSERT INTO impressions (booking_id, device_id)
+		VALUES ($1, $2)`,
+		req.BookingID, deviceID,
+	)
+	if err != nil {
+		return fmt.Errorf("insert impression: %w", err)
+	}
+	return nil
+}
+
 func (s *Service) List(ctx context.Context) ([]Device, error) {
 	rows, err := s.db.Query(ctx, `
 		SELECT id, venue_id, name, status, last_seen, ip_address, firmware_version, created_at
