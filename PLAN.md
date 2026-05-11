@@ -24,7 +24,7 @@ Venue screens (restaurants, offices, gyms) host a Raspberry Pi 5 running a kiosk
 | 1 | Hardware selection | Done | Pi 5 locked in |
 | 2 | Backend server | Done | Devices, slots, bookings, scheduler, Docker |
 | 3 | Device client | Done | Vanilla HTML/JS kiosk player, heartbeat, impressions |
-| 4 | Web app | Not started | Next.js — advertiser portal, venue portal, admin |
+| 4 | Web app | Not started | Nuxt.js (Vue 3) — advertiser portal, venue portal, admin |
 | 5 | Mobile app | Not started | React Native (Expo) — venue + advertiser companion |
 | 6 | Ad marketplace | Not started | Self-serve inventory browser, Stripe checkout |
 | 7 | Go-to-market | Ongoing from Stage 3 | Direct outreach, POS partnerships, referral program |
@@ -32,7 +32,7 @@ Venue screens (restaurants, offices, gyms) host a Raspberry Pi 5 running a kiosk
 
 ---
 
-## Stage 4 — Web App (Next.js)
+## Stage 4 — Web App (Nuxt.js / Vue 3)
 
 - **Advertiser portal:** campaign builder, creative upload, targeting (city/category/time), dashboard (impressions, spend)
 - **Venue portal:** registration, device status, earnings dashboard
