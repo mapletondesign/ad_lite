@@ -10,10 +10,12 @@ import (
 	chimw "github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/mapletondesign/ad_pack/api/middleware"
+	"github.com/mapletondesign/ad_pack/internal/advertisers"
 	"github.com/mapletondesign/ad_pack/internal/bookings"
 	"github.com/mapletondesign/ad_pack/internal/devices"
 	"github.com/mapletondesign/ad_pack/internal/scheduler"
 	"github.com/mapletondesign/ad_pack/internal/slots"
+	"github.com/mapletondesign/ad_pack/internal/venues"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -23,6 +25,12 @@ func NewRouter(db *pgxpool.Pool, rdb *redis.Client) http.Handler {
 	r.Use(chimw.Recoverer)
 	r.Use(middleware.Logger)
 	r.Use(chimw.RequestID)
+
+	venueSvc := venues.NewService(db)
+	venueHandler := venues.NewHandler(venueSvc)
+
+	advertiserSvc := advertisers.NewService(db)
+	advertiserHandler := advertisers.NewHandler(advertiserSvc)
 
 	schedSvc := scheduler.NewService(db)
 	deviceSvc := devices.NewService(db, schedSvc)
@@ -37,6 +45,16 @@ func NewRouter(db *pgxpool.Pool, rdb *redis.Client) http.Handler {
 	r.Get("/health", healthHandler(db, rdb))
 
 	r.Route("/api/v1", func(r chi.Router) {
+		r.Route("/venues", func(r chi.Router) {
+			r.Post("/", venueHandler.Create)
+			r.Get("/", venueHandler.List)
+		})
+
+		r.Route("/advertisers", func(r chi.Router) {
+			r.Post("/", advertiserHandler.Create)
+			r.Get("/", advertiserHandler.List)
+		})
+
 		r.Route("/devices", func(r chi.Router) {
 			r.Post("/register", deviceHandler.Register)
 			r.Get("/", deviceHandler.List)
