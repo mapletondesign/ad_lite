@@ -1,4 +1,4 @@
-module github.com/mapletondesign/ad_sling
+module github.com/mapletondesign/ad_lite
 
 go 1.26.2
 

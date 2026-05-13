@@ -311,7 +311,7 @@ main {
 }
 
 .rev-seg--venue   { background: var(--actor-venue);      color: #fff; flex: 3; }
-.rev-seg--adsling  { background: var(--color-server);     color: #fff; flex: 2; }
+.rev-seg--adlite  { background: var(--color-server);     color: #fff; flex: 2; }
 .rev-seg--spend   { background: #94a3b8;                 color: #fff; flex: 5; }
 
 .rev-pct   { font-size: 1.1rem; font-weight: 800; }

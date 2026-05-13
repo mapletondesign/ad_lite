@@ -1,4 +1,4 @@
-# AdSling — Pre-Launch Checklist
+# AdLite — Pre-Launch Checklist
 
 Check every item before putting real devices or advertisers on the platform. Grouped by area.
 

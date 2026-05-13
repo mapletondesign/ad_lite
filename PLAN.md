@@ -1,6 +1,6 @@
-# AdSling — DOOH Advertising Platform
+# AdLite — DOOH Advertising Platform
 
-Venue screens (restaurants, offices, gyms) host a Raspberry Pi 5 running a kiosk player. Advertisers buy time slots. Venues earn 30% revenue share. AdSling takes 20%.
+Venue screens (restaurants, offices, gyms) host a Raspberry Pi 5 running a kiosk player. Advertisers buy time slots. Venues earn 30% revenue share. AdLite takes 20%.
 
 ---
 

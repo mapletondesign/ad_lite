@@ -1,4 +1,4 @@
-# AdSling — Security Patterns
+# AdLite — Security Patterns
 
 Reference for all security decisions. Follow these patterns consistently across every stage.
 

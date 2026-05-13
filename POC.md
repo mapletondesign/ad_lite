@@ -1,4 +1,4 @@
-# AdSling — Proof of Concept
+# AdLite — Proof of Concept
 
 **Goal:** A single display device pulls a playlist from a local server and rotates ads on screen. No billing, no marketplace, no mobile app — just prove the core loop works end to end.
 
@@ -18,10 +18,10 @@
 
 ## Step 1 — Scaffold the server
 
-Create `ad_sling/server/` as a Go module.
+Create `ad_lite/server/` as a Go module.
 
 ```
-ad_sling/server/
+ad_lite/server/
 ├── go.mod
 ├── main.go
 ├── handlers/
@@ -57,7 +57,7 @@ No database for the POC — hardcode two ads in `data/ads.go`. Keep the server o
 
 ## Step 2 — Add your two ad files
 
-Copy your JPEG and MP4 into `ad_sling/server/assets/`:
+Copy your JPEG and MP4 into `ad_lite/server/assets/`:
 
 ```
 server/assets/
@@ -70,7 +70,7 @@ server/assets/
 ## Step 3 — Build and run the server
 
 ```bash
-cd ad_sling/server
+cd ad_lite/server
 go mod tidy
 go run .
 ```
@@ -85,10 +85,10 @@ You should get the two-ad JSON array back.
 
 ## Step 4 — Scaffold the kiosk client
 
-Create `ad_sling/client/` as a plain HTML5 + vanilla JS app. No framework needed for the POC.
+Create `ad_lite/client/` as a plain HTML5 + vanilla JS app. No framework needed for the POC.
 
 ```
-ad_sling/client/
+ad_lite/client/
 ├── index.html
 ├── css/
 │   └── player.css

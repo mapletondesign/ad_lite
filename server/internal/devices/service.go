@@ -8,8 +8,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/mapletondesign/ad_sling/internal/auth"
-	"github.com/mapletondesign/ad_sling/internal/scheduler"
+	"github.com/mapletondesign/ad_lite/internal/auth"
+	"github.com/mapletondesign/ad_lite/internal/scheduler"
 )
 
 type Service struct {

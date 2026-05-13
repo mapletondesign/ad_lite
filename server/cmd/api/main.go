@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
-	"github.com/mapletondesign/ad_sling/api"
-	"github.com/mapletondesign/ad_sling/internal/auth"
-	"github.com/mapletondesign/ad_sling/internal/db"
+	"github.com/mapletondesign/ad_lite/api"
+	"github.com/mapletondesign/ad_lite/internal/auth"
+	"github.com/mapletondesign/ad_lite/internal/db"
 )
 
 func main() {

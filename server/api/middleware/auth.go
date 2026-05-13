@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/mapletondesign/ad_sling/internal/auth"
+	"github.com/mapletondesign/ad_lite/internal/auth"
 )
 
 type contextKey string
