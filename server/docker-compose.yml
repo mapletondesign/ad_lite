@@ -2,16 +2,16 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: adpack
-      POSTGRES_PASSWORD: adpack
-      POSTGRES_DB: adpack
+      POSTGRES_USER: adsling
+      POSTGRES_PASSWORD: adsling
+      POSTGRES_DB: adsling
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./migrations:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U adpack"]
+      test: ["CMD-SHELL", "pg_isready -U adsling"]
       interval: 5s
       timeout: 5s
       retries: 5

@@ -1,4 +1,4 @@
-# AdPack — Security Patterns
+# AdSling — Security Patterns
 
 Reference for all security decisions. Follow these patterns consistently across every stage.
 

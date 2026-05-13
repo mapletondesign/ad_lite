@@ -1,4 +1,4 @@
-# AdPack — Pre-Launch Checklist
+# AdSling — Pre-Launch Checklist
 
 Check every item before putting real devices or advertisers on the platform. Grouped by area.
 

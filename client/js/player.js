@@ -2,7 +2,7 @@
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
-const STORAGE_KEY        = 'adpack_device_id';
+const STORAGE_KEY        = 'adsling_device_id';
 const HEARTBEAT_INTERVAL = 60 * 1000;  // keep server status updated
 const RETRY_DELAY        = 10 * 1000;  // wait before retrying on error
 const NO_ADS_DELAY       = 30 * 1000;  // poll interval when playlist is empty
