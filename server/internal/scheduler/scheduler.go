@@ -2,11 +2,15 @@ package scheduler
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 )
+
+const playlistTTL = 60 * time.Second
 
 type AdItem struct {
 	BookingID   string `json:"booking_id"`
@@ -15,18 +19,39 @@ type AdItem struct {
 }
 
 type Service struct {
-	db *pgxpool.Pool
+	db  *pgxpool.Pool
+	rdb *redis.Client
 }
 
-func NewService(db *pgxpool.Pool) *Service {
-	return &Service{db: db}
+func NewService(db *pgxpool.Pool, rdb *redis.Client) *Service {
+	return &Service{db: db, rdb: rdb}
 }
 
-// PlaylistForDevice returns the ads currently scheduled for a device.
-// It matches bookings whose slot covers the current day-of-week and time window.
 func (s *Service) PlaylistForDevice(ctx context.Context, deviceID string) ([]AdItem, error) {
+	key := "playlist:" + deviceID
+
+	if cached, err := s.rdb.Get(ctx, key).Bytes(); err == nil {
+		var items []AdItem
+		if json.Unmarshal(cached, &items) == nil {
+			return items, nil
+		}
+	}
+
+	items, err := s.queryPlaylist(ctx, deviceID)
+	if err != nil {
+		return nil, err
+	}
+
+	if b, err := json.Marshal(items); err == nil {
+		s.rdb.Set(ctx, key, b, playlistTTL)
+	}
+
+	return items, nil
+}
+
+func (s *Service) queryPlaylist(ctx context.Context, deviceID string) ([]AdItem, error) {
 	now := time.Now().UTC()
-	dow := int(now.Weekday()) // 0=Sun … 6=Sat
+	dow := int(now.Weekday())
 	clock := fmt.Sprintf("%02d:%02d", now.Hour(), now.Minute())
 
 	rows, err := s.db.Query(ctx, `

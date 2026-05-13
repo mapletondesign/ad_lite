@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	chimw "github.com/go-chi/chi/v5/middleware"
@@ -39,7 +40,7 @@ func NewRouter(db *pgxpool.Pool, rdb *redis.Client, privateKey *rsa.PrivateKey, 
 	advertiserSvc := advertisers.NewService(db)
 	advertiserHandler := advertisers.NewHandler(advertiserSvc)
 
-	schedSvc := scheduler.NewService(db)
+	schedSvc := scheduler.NewService(db, rdb)
 	deviceSvc := devices.NewService(db, schedSvc, privateKey)
 	deviceHandler := devices.NewHandler(deviceSvc)
 
@@ -95,8 +96,13 @@ func NewRouter(db *pgxpool.Pool, rdb *redis.Client, privateKey *rsa.PrivateKey, 
 			r.Use(middleware.DeviceAuth(publicKey))
 
 			r.Get("/devices", deviceHandler.List)
-			r.Post("/devices/{id}/heartbeat", deviceHandler.Heartbeat)
-			r.Post("/devices/{id}/impression", deviceHandler.Impression)
+
+			// Heartbeat and impression are rate-limited: 30 req/min per device
+			r.Group(func(r chi.Router) {
+				r.Use(middleware.DeviceRateLimit(rdb, 30, time.Minute))
+				r.Post("/devices/{id}/heartbeat", deviceHandler.Heartbeat)
+				r.Post("/devices/{id}/impression", deviceHandler.Impression)
+			})
 		})
 	})
 
