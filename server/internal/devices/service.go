@@ -2,23 +2,24 @@ package devices
 
 import (
 	"context"
+	"crypto/rsa"
 	"fmt"
-	"os"
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/mapletondesign/ad_pack/internal/scheduler"
+	"github.com/mapletondesign/ad_sling/internal/auth"
+	"github.com/mapletondesign/ad_sling/internal/scheduler"
 )
 
 type Service struct {
-	db        *pgxpool.Pool
-	scheduler *scheduler.Service
+	db         *pgxpool.Pool
+	scheduler  *scheduler.Service
+	privateKey *rsa.PrivateKey
 }
 
-func NewService(db *pgxpool.Pool, sched *scheduler.Service) *Service {
-	return &Service{db: db, scheduler: sched}
+func NewService(db *pgxpool.Pool, sched *scheduler.Service, privateKey *rsa.PrivateKey) *Service {
+	return &Service{db: db, scheduler: sched, privateKey: privateKey}
 }
 
 func (s *Service) Register(ctx context.Context, req RegisterRequest) (RegisterResponse, error) {
@@ -33,21 +34,12 @@ func (s *Service) Register(ctx context.Context, req RegisterRequest) (RegisterRe
 		return RegisterResponse{}, fmt.Errorf("insert device: %w", err)
 	}
 
-	secret := os.Getenv("JWT_SECRET")
-	if secret == "" {
-		return RegisterResponse{}, fmt.Errorf("JWT_SECRET not configured")
-	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub":  id,
-		"role": "device",
-		"iat":  time.Now().Unix(),
-	})
-	signed, err := token.SignedString([]byte(secret))
+	token, err := auth.IssueDeviceToken(s.privateKey, id)
 	if err != nil {
-		return RegisterResponse{}, fmt.Errorf("sign token: %w", err)
+		return RegisterResponse{}, fmt.Errorf("issue device token: %w", err)
 	}
 
-	return RegisterResponse{DeviceID: id, Token: signed}, nil
+	return RegisterResponse{DeviceID: id, Token: token}, nil
 }
 
 func (s *Service) Heartbeat(ctx context.Context, deviceID string, req HeartbeatRequest) (HeartbeatResponse, error) {

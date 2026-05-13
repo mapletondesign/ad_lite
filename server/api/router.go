@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"crypto/rsa"
 	"encoding/json"
 	"net/http"
 	"os"
@@ -9,17 +10,18 @@ import (
 	"github.com/go-chi/chi/v5"
 	chimw "github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/mapletondesign/ad_pack/api/middleware"
-	"github.com/mapletondesign/ad_pack/internal/advertisers"
-	"github.com/mapletondesign/ad_pack/internal/bookings"
-	"github.com/mapletondesign/ad_pack/internal/devices"
-	"github.com/mapletondesign/ad_pack/internal/scheduler"
-	"github.com/mapletondesign/ad_pack/internal/slots"
-	"github.com/mapletondesign/ad_pack/internal/venues"
+	"github.com/mapletondesign/ad_sling/api/middleware"
+	"github.com/mapletondesign/ad_sling/internal/advertisers"
+	"github.com/mapletondesign/ad_sling/internal/auth"
+	"github.com/mapletondesign/ad_sling/internal/bookings"
+	"github.com/mapletondesign/ad_sling/internal/devices"
+	"github.com/mapletondesign/ad_sling/internal/scheduler"
+	"github.com/mapletondesign/ad_sling/internal/slots"
+	"github.com/mapletondesign/ad_sling/internal/venues"
 	"github.com/redis/go-redis/v9"
 )
 
-func NewRouter(db *pgxpool.Pool, rdb *redis.Client) http.Handler {
+func NewRouter(db *pgxpool.Pool, rdb *redis.Client, privateKey *rsa.PrivateKey, publicKey *rsa.PublicKey) http.Handler {
 	r := chi.NewRouter()
 
 	r.Use(chimw.Recoverer)
@@ -28,6 +30,9 @@ func NewRouter(db *pgxpool.Pool, rdb *redis.Client) http.Handler {
 	r.Use(middleware.SecurityHeaders)
 	r.Use(middleware.MaxBodySize(1 << 20)) // 1 MB
 
+	authSvc := auth.NewService(db, privateKey, publicKey)
+	authHandler := auth.NewHandler(authSvc)
+
 	venueSvc := venues.NewService(db)
 	venueHandler := venues.NewHandler(venueSvc)
 
@@ -35,7 +40,7 @@ func NewRouter(db *pgxpool.Pool, rdb *redis.Client) http.Handler {
 	advertiserHandler := advertisers.NewHandler(advertiserSvc)
 
 	schedSvc := scheduler.NewService(db)
-	deviceSvc := devices.NewService(db, schedSvc)
+	deviceSvc := devices.NewService(db, schedSvc, privateKey)
 	deviceHandler := devices.NewHandler(deviceSvc)
 
 	slotSvc := slots.NewService(db)
@@ -47,9 +52,14 @@ func NewRouter(db *pgxpool.Pool, rdb *redis.Client) http.Handler {
 	r.Get("/health", healthHandler(db, rdb))
 
 	r.Route("/api/v1", func(r chi.Router) {
-		// Management routes — require API key
+		// Auth — open
+		r.Post("/auth/register", authHandler.Register)
+		r.Post("/auth/login", authHandler.Login)
+		r.Post("/auth/refresh", authHandler.Refresh)
+
+		// Management routes — require admin JWT
 		r.Group(func(r chi.Router) {
-			r.Use(middleware.APIKeyAuth)
+			r.Use(middleware.UserAuth(publicKey, "admin"))
 
 			r.Route("/venues", func(r chi.Router) {
 				r.Post("/", venueHandler.Create)
@@ -77,12 +87,12 @@ func NewRouter(db *pgxpool.Pool, rdb *redis.Client) http.Handler {
 			})
 		})
 
-		// Device registration — open (device needs to obtain its token)
+		// Device registration — open (device obtains its token here)
 		r.Post("/devices/register", deviceHandler.Register)
 
 		// Device routes — require device JWT
 		r.Group(func(r chi.Router) {
-			r.Use(middleware.DeviceAuth)
+			r.Use(middleware.DeviceAuth(publicKey))
 
 			r.Get("/devices", deviceHandler.List)
 			r.Post("/devices/{id}/heartbeat", deviceHandler.Heartbeat)

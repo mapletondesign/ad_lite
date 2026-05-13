@@ -11,13 +11,23 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
-	"github.com/mapletondesign/ad_pack/api"
-	"github.com/mapletondesign/ad_pack/internal/db"
+	"github.com/mapletondesign/ad_sling/api"
+	"github.com/mapletondesign/ad_sling/internal/auth"
+	"github.com/mapletondesign/ad_sling/internal/db"
 )
 
 func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Println("no .env file found, reading environment directly")
+	}
+
+	privateKey, err := auth.LoadPrivateKey()
+	if err != nil {
+		log.Fatalf("load private key: %v", err)
+	}
+	publicKey, err := auth.LoadPublicKey()
+	if err != nil {
+		log.Fatalf("load public key: %v", err)
 	}
 
 	pool, err := db.Connect(os.Getenv("DATABASE_URL"))
@@ -36,7 +46,7 @@ func main() {
 
 	srv := &http.Server{
 		Addr:         fmt.Sprintf(":%s", port),
-		Handler:      api.NewRouter(pool, rdb),
+		Handler:      api.NewRouter(pool, rdb, privateKey, publicKey),
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
 		IdleTimeout:  120 * time.Second,

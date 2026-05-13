@@ -3,7 +3,7 @@ package devices
 import (
 	"time"
 
-	"github.com/mapletondesign/ad_pack/internal/scheduler"
+	"github.com/mapletondesign/ad_sling/internal/scheduler"
 )
 
 type Device struct {

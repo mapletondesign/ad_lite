@@ -2,66 +2,73 @@ package middleware
 
 import (
 	"context"
+	"crypto/rsa"
 	"net/http"
-	"os"
 	"strings"
 
-	"github.com/golang-jwt/jwt/v5"
+	"github.com/mapletondesign/ad_sling/internal/auth"
 )
 
 type contextKey string
 
-const DeviceIDKey contextKey = "device_id"
+const (
+	DeviceIDKey contextKey = "device_id"
+	UserIDKey   contextKey = "user_id"
+	RoleKey     contextKey = "role"
+)
 
-func DeviceAuth(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		secret := os.Getenv("JWT_SECRET")
-		if secret == "" {
-			http.Error(w, `{"error":"server misconfigured"}`, http.StatusInternalServerError)
-			return
-		}
-
-		header := r.Header.Get("Authorization")
-		if !strings.HasPrefix(header, "Bearer ") {
-			http.Error(w, `{"error":"missing or invalid authorization header"}`, http.StatusUnauthorized)
-			return
-		}
-		tokenStr := strings.TrimPrefix(header, "Bearer ")
-
-		token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (any, error) {
-			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, jwt.ErrSignatureInvalid
+func DeviceAuth(publicKey *rsa.PublicKey) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			tokenStr := bearerToken(r)
+			if tokenStr == "" {
+				http.Error(w, `{"error":"missing or invalid authorization header"}`, http.StatusUnauthorized)
+				return
 			}
-			return []byte(secret), nil
+			claims, err := auth.VerifyToken(publicKey, tokenStr)
+			if err != nil || claims.Role != "device" {
+				http.Error(w, `{"error":"invalid or expired token"}`, http.StatusUnauthorized)
+				return
+			}
+			ctx := context.WithValue(r.Context(), DeviceIDKey, claims.Subject)
+			next.ServeHTTP(w, r.WithContext(ctx))
 		})
-		if err != nil || !token.Valid {
-			http.Error(w, `{"error":"invalid or expired token"}`, http.StatusUnauthorized)
-			return
-		}
-
-		claims, ok := token.Claims.(jwt.MapClaims)
-		if !ok || claims["role"] != "device" {
-			http.Error(w, `{"error":"invalid token claims"}`, http.StatusForbidden)
-			return
-		}
-
-		deviceID, _ := claims["sub"].(string)
-		ctx := context.WithValue(r.Context(), DeviceIDKey, deviceID)
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
+	}
 }
 
-func APIKeyAuth(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		expected := os.Getenv("API_KEY")
-		if expected == "" {
-			http.Error(w, `{"error":"server misconfigured"}`, http.StatusInternalServerError)
-			return
-		}
-		if r.Header.Get("X-API-Key") != expected {
-			http.Error(w, `{"error":"invalid or missing API key"}`, http.StatusUnauthorized)
-			return
-		}
-		next.ServeHTTP(w, r)
-	})
+func UserAuth(publicKey *rsa.PublicKey, roles ...string) func(http.Handler) http.Handler {
+	allowed := make(map[string]bool, len(roles))
+	for _, role := range roles {
+		allowed[role] = true
+	}
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			tokenStr := bearerToken(r)
+			if tokenStr == "" {
+				http.Error(w, `{"error":"missing or invalid authorization header"}`, http.StatusUnauthorized)
+				return
+			}
+			claims, err := auth.VerifyToken(publicKey, tokenStr)
+			if err != nil {
+				http.Error(w, `{"error":"invalid or expired token"}`, http.StatusUnauthorized)
+				return
+			}
+			if len(allowed) > 0 && !allowed[claims.Role] {
+				http.Error(w, `{"error":"forbidden"}`, http.StatusForbidden)
+				return
+			}
+			ctx := r.Context()
+			ctx = context.WithValue(ctx, UserIDKey, claims.Subject)
+			ctx = context.WithValue(ctx, RoleKey, claims.Role)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
+}
+
+func bearerToken(r *http.Request) string {
+	header := r.Header.Get("Authorization")
+	if !strings.HasPrefix(header, "Bearer ") {
+		return ""
+	}
+	return strings.TrimPrefix(header, "Bearer ")
 }

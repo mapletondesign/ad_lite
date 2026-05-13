@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AdSling — System Architecture &amp; Flow</title>
+  <link rel="stylesheet" href="system-flow.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <h1 class="brand-name">AdSling</h1>
+    <p class="brand-sub">DOOH Advertising Network — System Architecture &amp; Flow</p>
+  </div>
+</header>
+
+<main>
+
+  <!-- ── Architecture Overview ── -->
+  <section class="section">
+    <h2 class="section-title">System Architecture</h2>
+    <div class="arch-wrap">
+      <svg viewBox="0 0 900 320" xmlns="http://www.w3.org/2000/svg" aria-label="AdSling system architecture diagram" role="img">
+        <defs>
+          <marker id="arr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" class="arr-fill"/>
+          </marker>
+          <marker id="arr-rev" markerWidth="8" markerHeight="6" refX="1" refY="3" orient="auto">
+            <polygon points="8 0, 0 3, 8 6" class="arr-fill"/>
+          </marker>
+        </defs>
+
+        <!-- Portals -->
+        <rect x="10" y="10" width="155" height="52" rx="8" class="box box--portal"/>
+        <text x="87" y="33" class="box-title">Venue Portal</text>
+        <text x="87" y="51" class="box-sub">Nuxt.js / Vue 3</text>
+
+        <rect x="178" y="10" width="165" height="52" rx="8" class="box box--portal"/>
+        <text x="260" y="33" class="box-title">Advertiser Portal</text>
+        <text x="260" y="51" class="box-sub">Nuxt.js / Vue 3</text>
+
+        <rect x="356" y="10" width="155" height="52" rx="8" class="box box--portal"/>
+        <text x="433" y="33" class="box-title">Admin Panel</text>
+        <text x="433" y="51" class="box-sub">Nuxt.js / Vue 3</text>
+
+        <!-- Portal → Server arrows -->
+        <line x1="87" y1="62" x2="87" y2="112" class="arr-line" marker-end="url(#arr)"/>
+        <line x1="260" y1="62" x2="260" y2="112" class="arr-line" marker-end="url(#arr)"/>
+        <line x1="433" y1="62" x2="433" y2="112" class="arr-line" marker-end="url(#arr)"/>
+
+        <!-- API Server -->
+        <rect x="10" y="112" width="500" height="72" rx="8" class="box box--server"/>
+        <text x="260" y="146" class="box-title box-title--lg">AdSling API Server</text>
+        <text x="260" y="165" class="box-sub">Go · chi v5 · RS256 JWT · Rate Limiting · Redis Cache</text>
+
+        <!-- Server → Data stores arrows -->
+        <line x1="88" y1="184" x2="88" y2="232" class="arr-line" marker-end="url(#arr)"/>
+        <line x1="260" y1="184" x2="260" y2="232" class="arr-line" marker-end="url(#arr)"/>
+        <line x1="420" y1="184" x2="420" y2="232" class="arr-line" marker-end="url(#arr)"/>
+
+        <!-- Data stores -->
+        <rect x="10" y="232" width="155" height="52" rx="8" class="box box--data"/>
+        <text x="87" y="255" class="box-title">PostgreSQL 16</text>
+        <text x="87" y="273" class="box-sub">Primary data store</text>
+
+        <rect x="178" y="232" width="165" height="52" rx="8" class="box box--data"/>
+        <text x="260" y="255" class="box-title">Redis 7</text>
+        <text x="260" y="273" class="box-sub">Playlist cache · 60s TTL</text>
+
+        <rect x="356" y="232" width="155" height="52" rx="8" class="box box--data"/>
+        <text x="433" y="255" class="box-title">S3 / R2</text>
+        <text x="433" y="273" class="box-sub">Ad creative assets</text>
+
+        <!-- Server ↔ Device arrows (two offset lines) -->
+        <line x1="510" y1="141" x2="560" y2="141" class="arr-line arr-line--device" marker-end="url(#arr)"/>
+        <line x1="560" y1="155" x2="510" y2="155" class="arr-line arr-line--device" marker-end="url(#arr)"/>
+        <text x="533" y="134" class="flow-label">playlist</text>
+        <text x="527" y="170" class="flow-label">heartbeat</text>
+
+        <!-- Device -->
+        <rect x="560" y="112" width="165" height="72" rx="8" class="box box--device"/>
+        <text x="642" y="146" class="box-title">Raspberry Pi 5</text>
+        <text x="642" y="163" class="box-sub">Kiosk Player</text>
+        <text x="642" y="179" class="box-sub">HTML / CSS / JS</text>
+
+        <!-- Device → Display arrow -->
+        <line x1="642" y1="184" x2="642" y2="232" class="arr-line arr-line--device" marker-end="url(#arr)"/>
+
+        <!-- Display -->
+        <rect x="568" y="232" width="150" height="52" rx="8" class="box box--display"/>
+        <text x="643" y="255" class="box-title">HD Display</text>
+        <text x="643" y="273" class="box-sub">Full-screen ad player</text>
+
+        <!-- Hardware bracket label -->
+        <rect x="552" y="104" width="182" height="190" rx="10" class="hardware-outline"/>
+        <text x="643" y="305" class="box-sub box-sub--muted">Venue hardware</text>
+      </svg>
+    </div>
+  </section>
+
+  <!-- ── Flow Phases ── -->
+  <section class="section">
+    <h2 class="section-title">System Flows</h2>
+
+    <!-- Phase 1 -->
+    <div class="phase">
+      <div class="phase-header">
+        <span class="phase-num">1</span>
+        <span class="phase-title">Onboarding</span>
+      </div>
+      <ol class="steps">
+        <li class="step">
+          <div class="step-actors">
+            <span class="actor actor--venue">Venue Owner</span>
+            <span class="step-arrow">→</span>
+            <span class="actor actor--server">API Server</span>
+            <span class="step-arrow">→</span>
+            <span class="actor actor--db">DB</span>
+          </div>
+          <div class="step-desc">
+            <code>POST /auth/register</code> with <code>role: "venue"</code> — atomic transaction creates venue record + user account, returns JWT pair
+          </div>
+        </li>
+        <li class="step">
+          <div class="step-actors">
+            <span class="actor actor--device">Device / Pi 5</span>
+            <span class="step-arrow">→</span>
+            <span class="actor actor--server">API Server</span>
+            <span class="step-arrow">→</span>
+            <span class="actor actor--device">Device</span>
+          </div>
+          <div class="step-desc">
+            <code>POST /api/v1/devices/register</code> — server issues a non-expiring RS256 device JWT; stored permanently on the device
+          </div>
+        </li>
+        <li class="step">
+          <div class="step-actors">
+            <span class="actor actor--advertiser">Advertiser</span>
+            <span class="step-arrow">→</span>
+            <span class="actor actor--server">API Server</span>
+            <span class="step-arrow">→</span>
+            <span class="actor actor--db">DB</span>
+          </div>
+          <div class="step-desc">
+            <code>POST /auth/register</code> with <code>role: "advertiser"</code> — creates advertiser record + user account, returns 15-min access token + 7-day refresh token
+          </div>
+        </li>
+      </ol>
+    </div>
+
+    <!-- Phase 2 -->
+    <div class="phase">
+      <div class="phase-header">
+        <span class="phase-num">2</span>
+        <span class="phase-title">Campaign Setup</span>
+      </div>
+      <ol class="steps">
+        <li class="step">
+          <div class="step-actors">
+            <span class="actor actor--admin">Admin</span>
+            <span class="step-arrow">→</span>
+            <span class="actor actor--server">API Server</span>
+            <span class="step-arrow">→</span>
+            <span class="actor actor--db">DB</span>
+          </div>
+          <div class="step-desc">
+            <code>POST /api/v1/slots</code> — defines a sellable time window on a device (e.g. Mon–Fri 11am–2pm, $150/week)
+          </div>
+        </li>
+        <li class="step">
+          <div class="step-actors">
+            <span class="actor actor--advertiser">Advertiser</span>
+            <span class="step-arrow">→</span>
+            <span class="actor actor--server">API Server</span>
+            <span class="step-arrow">→</span>
+            <span class="actor actor--db">DB</span>
+          </div>
+          <div class="step-desc">
+            <code>POST /api/v1/bookings</code> — atomic transaction: availability check → booking insert → slot status set to <code>booked</code>; no double-booking possible
+          </div>
+        </li>
+        <li class="step">
+          <div class="step-actors">
+            <span class="actor actor--advertiser">Advertiser</span>
+            <span class="step-arrow">→</span>
+            <span class="actor actor--server">API Server</span>
+            <span class="step-arrow">→</span>
+            <span class="actor actor--data">S3 / R2</span>
+          </div>
+          <div class="step-desc">
+            Creative (image or video) uploaded via API, stored in Cloudflare R2; CDN URL written back to the booking record
+          </div>
+        </li>
+      </ol>
+    </div>
+
+    <!-- Phase 3 -->
+    <div class="phase">
+      <div class="phase-header">
+        <span class="phase-num">3</span>
+        <span class="phase-title">
+          Ad Delivery Loop
+          <span class="phase-badge">repeats every 60 s</span>
+        </span>
+      </div>
+      <ol class="steps">
+        <li class="step">
+          <div class="step-actors">
+            <span class="actor actor--device">Device</span>
+            <span class="step-arrow">→</span>
+            <span class="actor actor--server">API Server</span>
+          </div>
+          <div class="step-desc">
+            <code>POST /api/v1/devices/:id/heartbeat</code> (Bearer device JWT) — updates <code>last_seen</code> and <code>status: online</code>; rate-limited per device in Redis
+          </div>
+        </li>
+        <li class="step">
+          <div class="step-actors">
+            <span class="actor actor--server">API Server</span>
+            <span class="step-arrow">→</span>
+            <span class="actor actor--db">DB / Redis</span>
+            <span class="step-arrow">→</span>
+            <span class="actor actor--device">Device</span>
+          </div>
+          <div class="step-desc">
+            Scheduler queries Redis cache first (TTL 60 s); on miss, joins bookings + slots filtered by current day-of-week and time window; returns ordered playlist of <code>{creative_url, booking_id, duration_sec}</code>
+          </div>
+        </li>
+        <li class="step">
+          <div class="step-actors">
+            <span class="actor actor--device">Device</span>
+            <span class="step-arrow">→</span>
+            <span class="actor actor--display">HD Display</span>
+          </div>
+          <div class="step-desc">
+            Plays each ad in sequence — images fade in/out (CSS transitions), video plays to completion; green status dot confirms active playback
+          </div>
+        </li>
+        <li class="step">
+          <div class="step-actors">
+            <span class="actor actor--device">Device</span>
+            <span class="step-arrow">→</span>
+            <span class="actor actor--server">API Server</span>
+            <span class="step-arrow">→</span>
+            <span class="actor actor--db">DB</span>
+          </div>
+          <div class="step-desc">
+            <code>POST /api/v1/devices/:id/impression</code> — fire-and-forget; records <code>{booking_id, device_id, played_at}</code> for billing and analytics
+          </div>
+        </li>
+      </ol>
+    </div>
+
+    <!-- Phase 4 -->
+    <div class="phase">
+      <div class="phase-header">
+        <span class="phase-num">4</span>
+        <span class="phase-title">Revenue Distribution</span>
+      </div>
+      <div class="revenue-section">
+        <div class="revenue-bar-wrap">
+          <div class="revenue-bar">
+            <div class="rev-seg rev-seg--venue">
+              <span class="rev-pct">30%</span>
+              <span class="rev-label">Venue</span>
+            </div>
+            <div class="rev-seg rev-seg--adsling">
+              <span class="rev-pct">20%</span>
+              <span class="rev-label">AdSling</span>
+            </div>
+            <div class="rev-seg rev-seg--spend">
+              <span class="rev-pct">50%</span>
+              <span class="rev-label">Ad Spend / Creative</span>
+            </div>
+          </div>
+        </div>
+        <div class="metrics-row">
+          <div class="metric-card">
+            <span class="metric-val">$10–$40</span>
+            <span class="metric-lbl">AdSling net / screen / mo</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-val">$15–$60</span>
+            <span class="metric-lbl">Venue payout / screen / mo</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-val">~300</span>
+            <span class="metric-lbl">Screens to break even</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-val">$700K</span>
+            <span class="metric-lbl">Monthly revenue at 20K screens</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ── Auth Model ── -->
+  <section class="section">
+    <h2 class="section-title">Auth Model</h2>
+    <div class="auth-grid">
+
+      <div class="auth-card">
+        <div class="auth-card-header auth-card-header--device">Device JWT</div>
+        <dl class="auth-detail-list">
+          <div class="auth-row"><dt>Algorithm</dt><dd>RS256</dd></div>
+          <div class="auth-row"><dt>Subject</dt><dd>device_id (UUID)</dd></div>
+          <div class="auth-row"><dt>Expiry</dt><dd>None — issued once at registration</dd></div>
+          <div class="auth-row"><dt>Role claim</dt><dd><code>device</code></dd></div>
+          <div class="auth-row"><dt>Verified by</dt><dd>RSA public key (read-only)</dd></div>
+        </dl>
+      </div>
+
+      <div class="auth-card">
+        <div class="auth-card-header auth-card-header--user">User Access Token</div>
+        <dl class="auth-detail-list">
+          <div class="auth-row"><dt>Algorithm</dt><dd>RS256</dd></div>
+          <div class="auth-row"><dt>Subject</dt><dd>user_id (UUID)</dd></div>
+          <div class="auth-row"><dt>Expiry</dt><dd>15 minutes</dd></div>
+          <div class="auth-row"><dt>Role claim</dt><dd><code>admin</code> · <code>advertiser</code> · <code>venue</code></dd></div>
+          <div class="auth-row"><dt>Extra claims</dt><dd>advertiser_id or venue_id</dd></div>
+        </dl>
+      </div>
+
+      <div class="auth-card">
+        <div class="auth-card-header auth-card-header--refresh">Refresh Token</div>
+        <dl class="auth-detail-list">
+          <div class="auth-row"><dt>Format</dt><dd>Random 32-byte hex string</dd></div>
+          <div class="auth-row"><dt>Stored as</dt><dd>SHA-256 hash in <code>refresh_tokens</code> table</dd></div>
+          <div class="auth-row"><dt>Expiry</dt><dd>7 days</dd></div>
+          <div class="auth-row"><dt>Rotation</dt><dd>Old token deleted on each use; new one issued</dd></div>
+          <div class="auth-row"><dt>Admin creation</dt><dd>Direct DB insert (no self-registration)</dd></div>
+        </dl>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <p>AdSling · DOOH Advertising Network · Confidential</p>
+</footer>
+
+</body>
+</html>
