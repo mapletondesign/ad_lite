@@ -6,19 +6,19 @@ Check every item before putting real devices or advertisers on the platform. Gro
 
 ## Security — Critical (blocking)
 
-- [ ] Replace UUID device tokens with signed JWTs (RS256)
-- [ ] Add JWT auth middleware — all API routes require a valid token
-- [ ] Implement role enforcement: `device`, `advertiser`, `venue`, `admin`
-- [ ] Stop returning raw Go error strings to clients — generic 500 message only
-- [ ] Add `request_id` to all error responses for server-side correlation
-- [ ] Cap request body size with `http.MaxBytesReader` on all routes
+- [x] Replace UUID device tokens with signed JWTs (HS256, upgrade to RS256 when multi-service)
+- [x] Add JWT auth middleware — device routes require valid device JWT
+- [x] Add API key auth — management routes require `X-API-Key` header (stopgap until Stage 4 user auth)
+- [ ] Implement full role enforcement: `advertiser`, `venue`, `admin` (Stage 4)
+- [x] Stop returning raw Go error strings to clients — generic 500 message + server-side log
+- [x] Cap request body size with `http.MaxBytesReader` (1MB) on all routes
 - [ ] Validate `creative_url` against CDN domain allowlist before saving
 - [ ] Validate UUID path params before DB queries (reject malformed IDs early)
 - [ ] Verify device exists before accepting impression records
 
 ## Security — High (before launch)
 
-- [ ] Add security headers middleware (`X-Content-Type-Options`, `X-Frame-Options`, `HSTS`, `CSP`, `Referrer-Policy`)
+- [x] Add security headers middleware (`X-Content-Type-Options`, `X-Frame-Options`, `HSTS`, `Referrer-Policy`)
 - [ ] Configure CORS — allowlist known origins, never wildcard
 - [ ] Add rate limiting on `/heartbeat` (2/min per device) and `/impression` (10/min per device)
 - [ ] Add rate limiting on registration and auth endpoints (per IP)

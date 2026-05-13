@@ -2,7 +2,10 @@ package bookings
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
+
+	chimw "github.com/go-chi/chi/v5/middleware"
 )
 
 type Handler struct {
@@ -24,12 +27,13 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch err.Error() {
 		case "slot not found":
-			writeError(w, http.StatusNotFound, err.Error())
+			writeError(w, http.StatusNotFound, "slot not found")
 		case "slot is not available for the requested date range",
 			"slot is paused and cannot be booked":
 			writeError(w, http.StatusConflict, err.Error())
 		default:
-			writeError(w, http.StatusBadRequest, err.Error())
+			log.Printf("[%s] create booking: %v", chimw.GetReqID(r.Context()), err)
+			writeError(w, http.StatusInternalServerError, "internal server error")
 		}
 		return
 	}
@@ -45,7 +49,8 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 
 	bookings, err := h.svc.List(r.Context(), f)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, err.Error())
+		log.Printf("[%s] list bookings: %v", chimw.GetReqID(r.Context()), err)
+		writeError(w, http.StatusInternalServerError, "internal server error")
 		return
 	}
 	if bookings == nil {

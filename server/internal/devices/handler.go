@@ -2,9 +2,11 @@ package devices
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	chimw "github.com/go-chi/chi/v5/middleware"
 )
 
 type Handler struct {
@@ -28,7 +30,8 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.svc.Register(r.Context(), req)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, err.Error())
+		log.Printf("[%s] register device: %v", chimw.GetReqID(r.Context()), err)
+		writeError(w, http.StatusInternalServerError, "internal server error")
 		return
 	}
 	writeJSON(w, http.StatusCreated, resp)
@@ -48,7 +51,8 @@ func (h *Handler) Heartbeat(w http.ResponseWriter, r *http.Request) {
 			writeError(w, http.StatusNotFound, "device not found")
 			return
 		}
-		writeError(w, http.StatusInternalServerError, err.Error())
+		log.Printf("[%s] heartbeat device %s: %v", chimw.GetReqID(r.Context()), deviceID, err)
+		writeError(w, http.StatusInternalServerError, "internal server error")
 		return
 	}
 	writeJSON(w, http.StatusOK, resp)
@@ -62,7 +66,8 @@ func (h *Handler) Impression(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := h.svc.RecordImpression(r.Context(), deviceID, req); err != nil {
-		writeError(w, http.StatusBadRequest, err.Error())
+		log.Printf("[%s] impression device %s: %v", chimw.GetReqID(r.Context()), deviceID, err)
+		writeError(w, http.StatusBadRequest, "invalid impression request")
 		return
 	}
 	writeJSON(w, http.StatusCreated, map[string]string{"status": "recorded"})
@@ -71,7 +76,8 @@ func (h *Handler) Impression(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	devices, err := h.svc.List(r.Context())
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, err.Error())
+		log.Printf("[%s] list devices: %v", chimw.GetReqID(r.Context()), err)
+		writeError(w, http.StatusInternalServerError, "internal server error")
 		return
 	}
 	if devices == nil {

@@ -3,8 +3,10 @@ package devices
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/mapletondesign/ad_pack/internal/scheduler"
@@ -21,8 +23,6 @@ func NewService(db *pgxpool.Pool, sched *scheduler.Service) *Service {
 
 func (s *Service) Register(ctx context.Context, req RegisterRequest) (RegisterResponse, error) {
 	id := uuid.New().String()
-	// Token is a random UUID for now; replace with a signed JWT in production.
-	token := uuid.New().String()
 
 	_, err := s.db.Exec(ctx, `
 		INSERT INTO devices (id, venue_id, name, firmware_version, status)
@@ -33,7 +33,21 @@ func (s *Service) Register(ctx context.Context, req RegisterRequest) (RegisterRe
 		return RegisterResponse{}, fmt.Errorf("insert device: %w", err)
 	}
 
-	return RegisterResponse{DeviceID: id, Token: token}, nil
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		return RegisterResponse{}, fmt.Errorf("JWT_SECRET not configured")
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"sub":  id,
+		"role": "device",
+		"iat":  time.Now().Unix(),
+	})
+	signed, err := token.SignedString([]byte(secret))
+	if err != nil {
+		return RegisterResponse{}, fmt.Errorf("sign token: %w", err)
+	}
+
+	return RegisterResponse{DeviceID: id, Token: signed}, nil
 }
 
 func (s *Service) Heartbeat(ctx context.Context, deviceID string, req HeartbeatRequest) (HeartbeatResponse, error) {

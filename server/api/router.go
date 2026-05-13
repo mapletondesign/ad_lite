@@ -23,8 +23,10 @@ func NewRouter(db *pgxpool.Pool, rdb *redis.Client) http.Handler {
 	r := chi.NewRouter()
 
 	r.Use(chimw.Recoverer)
-	r.Use(middleware.Logger)
 	r.Use(chimw.RequestID)
+	r.Use(middleware.Logger)
+	r.Use(middleware.SecurityHeaders)
+	r.Use(middleware.MaxBodySize(1 << 20)) // 1 MB
 
 	venueSvc := venues.NewService(db)
 	venueHandler := venues.NewHandler(venueSvc)
@@ -45,44 +47,52 @@ func NewRouter(db *pgxpool.Pool, rdb *redis.Client) http.Handler {
 	r.Get("/health", healthHandler(db, rdb))
 
 	r.Route("/api/v1", func(r chi.Router) {
-		r.Route("/venues", func(r chi.Router) {
-			r.Post("/", venueHandler.Create)
-			r.Get("/", venueHandler.List)
+		// Management routes — require API key
+		r.Group(func(r chi.Router) {
+			r.Use(middleware.APIKeyAuth)
+
+			r.Route("/venues", func(r chi.Router) {
+				r.Post("/", venueHandler.Create)
+				r.Get("/", venueHandler.List)
+			})
+
+			r.Route("/advertisers", func(r chi.Router) {
+				r.Post("/", advertiserHandler.Create)
+				r.Get("/", advertiserHandler.List)
+			})
+
+			r.Route("/slots", func(r chi.Router) {
+				r.Get("/", slotHandler.List)
+				r.Post("/", slotHandler.Create)
+				r.Patch("/{id}", slotHandler.Update)
+			})
+
+			r.Route("/bookings", func(r chi.Router) {
+				r.Post("/", bookingHandler.Create)
+				r.Get("/", bookingHandler.List)
+			})
+
+			r.Route("/analytics", func(r chi.Router) {
+				r.Get("/impressions", stubHandler("impression reporting — coming in Stage 4"))
+			})
 		})
 
-		r.Route("/advertisers", func(r chi.Router) {
-			r.Post("/", advertiserHandler.Create)
-			r.Get("/", advertiserHandler.List)
-		})
+		// Device registration — open (device needs to obtain its token)
+		r.Post("/devices/register", deviceHandler.Register)
 
-		r.Route("/devices", func(r chi.Router) {
-			r.Post("/register", deviceHandler.Register)
-			r.Get("/", deviceHandler.List)
-			r.Post("/{id}/heartbeat", deviceHandler.Heartbeat)
-			r.Post("/{id}/impression", deviceHandler.Impression)
-		})
+		// Device routes — require device JWT
+		r.Group(func(r chi.Router) {
+			r.Use(middleware.DeviceAuth)
 
-		r.Route("/slots", func(r chi.Router) {
-			r.Get("/", slotHandler.List)
-			r.Post("/", slotHandler.Create)
-			r.Patch("/{id}", slotHandler.Update)
-		})
-
-		r.Route("/bookings", func(r chi.Router) {
-			r.Post("/", bookingHandler.Create)
-			r.Get("/", bookingHandler.List)
-		})
-
-		r.Route("/analytics", func(r chi.Router) {
-			r.Get("/impressions", stubHandler("impression reporting — coming in Stage 4"))
+			r.Get("/devices", deviceHandler.List)
+			r.Post("/devices/{id}/heartbeat", deviceHandler.Heartbeat)
+			r.Post("/devices/{id}/impression", deviceHandler.Impression)
 		})
 	})
 
-	// Serve ad creative assets uploaded to the server.
 	assetsDir := envOr("ASSETS_DIR", "./assets")
 	r.Handle("/assets/*", http.StripPrefix("/assets/", http.FileServer(http.Dir(assetsDir))))
 
-	// Serve the kiosk client app. Must be last — catches all remaining routes.
 	clientDir := envOr("CLIENT_DIR", "../client")
 	r.Handle("/*", http.FileServer(http.Dir(clientDir)))
 

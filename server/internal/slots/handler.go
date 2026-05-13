@@ -2,9 +2,11 @@ package slots
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	chimw "github.com/go-chi/chi/v5/middleware"
 )
 
 type Handler struct {
@@ -38,7 +40,8 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 
 	slots, err := h.svc.List(r.Context(), f)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, err.Error())
+		log.Printf("[%s] list slots: %v", chimw.GetReqID(r.Context()), err)
+		writeError(w, http.StatusInternalServerError, "internal server error")
 		return
 	}
 	if slots == nil {
