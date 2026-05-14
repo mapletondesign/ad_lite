@@ -1,0 +1,19 @@
+{
+  "name": "ad-lite-portal",
+  "private": true,
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "preview": "nuxt preview",
+    "typecheck": "vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "@pinia/nuxt": "^0.10.0",
+    "pinia": "^2.3.0"
+  },
+  "devDependencies": {
+    "nuxt": "^3.16.0",
+    "typescript": "^5.0.0",
+    "vue-tsc": "^2.0.0"
+  }
+}

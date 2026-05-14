@@ -29,6 +29,7 @@ func NewRouter(db *pgxpool.Pool, rdb *redis.Client, privateKey *rsa.PrivateKey, 
 	r.Use(chimw.Recoverer)
 	r.Use(chimw.RequestID)
 	r.Use(middleware.Logger)
+	r.Use(middleware.CORS(envOr("PORTAL_ORIGIN", "")))
 	r.Use(middleware.SecurityHeaders)
 
 	authSvc := auth.NewService(db, privateKey, publicKey)
