@@ -1,150 +1,159 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AdLite — Personas &amp; Workflows</title>
-  <link rel="stylesheet" href="personas-workflows.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="custom.css" />
 </head>
 <body>
 
-<header class="site-header">
-  <div class="header-inner">
+<header id="site-header" class="py-4">
+  <div class="container-lg px-4">
     <h1 class="brand-name">AdLite</h1>
-    <p class="brand-sub">Personas &amp; Workflows — who uses the platform and how</p>
+    <p class="brand-sub mb-0">Personas &amp; Workflows — who uses the platform and how</p>
   </div>
 </header>
 
-<main>
+<main class="container-lg px-4 py-5 d-flex flex-column gap-5">
 
   <!-- ── Personas ── -->
-  <section class="section">
-    <h2 class="section-title">Personas</h2>
-    <div class="persona-grid">
+  <section>
+    <h2 class="section-title mb-4">Personas</h2>
+    <div class="row g-3">
 
       <!-- Admin -->
-      <div class="persona-card">
-        <div class="persona-header">
-          <div class="persona-icon persona-icon--admin">🛠</div>
-          <div>
-            <div class="persona-name">AdLite Admin</div>
-            <div class="persona-role">Platform operator</div>
-          </div>
-        </div>
-        <div class="persona-body">
-          <span class="persona-tag persona-tag--admin">admin</span>
-          <div>
-            <div class="persona-section-label">Goals</div>
-            <ul class="persona-list">
-              <li>Onboard venues and advertisers</li>
-              <li>Configure devices and ad slots</li>
-              <li>Match advertisers to available inventory</li>
-              <li>Monitor campaign health and device status</li>
-            </ul>
-          </div>
-          <hr class="divider" />
-          <div>
-            <div class="persona-section-label">Portal access</div>
-            <ul class="persona-list">
-              <li>Full admin panel</li>
-              <li>Venues, advertisers, devices, slots, bookings</li>
-              <li>Impression reporting (Stage 4)</li>
-            </ul>
+      <div class="col-sm-6 col-xl-3">
+        <div class="card h-100">
+          <div class="card-body d-flex flex-column gap-3">
+            <div class="d-flex align-items-center gap-3">
+              <div class="persona-icon persona-icon--admin">🛠</div>
+              <div>
+                <div class="fw-bold">AdLite Admin</div>
+                <div class="text-muted small">Platform operator</div>
+              </div>
+            </div>
+            <span class="actor actor--admin align-self-start">admin</span>
+            <div>
+              <div class="text-muted small fw-semibold text-uppercase mb-1" style="letter-spacing:.06em">Goals</div>
+              <ul class="list-unstyled text-muted small mb-0 d-flex flex-column gap-1">
+                <li>Onboard venues and advertisers</li>
+                <li>Configure devices and ad slots</li>
+                <li>Match advertisers to inventory</li>
+                <li>Monitor device and campaign health</li>
+              </ul>
+            </div>
+            <hr class="my-0" />
+            <div>
+              <div class="text-muted small fw-semibold text-uppercase mb-1" style="letter-spacing:.06em">Portal access</div>
+              <ul class="list-unstyled text-muted small mb-0 d-flex flex-column gap-1">
+                <li>Full admin panel</li>
+                <li>Venues, advertisers, devices, slots, bookings</li>
+                <li>Impression reporting</li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
 
       <!-- Venue -->
-      <div class="persona-card">
-        <div class="persona-header">
-          <div class="persona-icon persona-icon--venue">🏪</div>
-          <div>
-            <div class="persona-name">Venue Manager</div>
-            <div class="persona-role">Business owner / location manager</div>
-          </div>
-        </div>
-        <div class="persona-body">
-          <span class="persona-tag persona-tag--venue">venue</span>
-          <div>
-            <div class="persona-section-label">Goals</div>
-            <ul class="persona-list">
-              <li>Earn passive revenue from existing screens</li>
-              <li>Minimal setup — plug in the device and done</li>
-              <li>See which screens are active</li>
-              <li>Track earnings over time</li>
-            </ul>
-          </div>
-          <hr class="divider" />
-          <div>
-            <div class="persona-section-label">Portal access</div>
-            <ul class="persona-list">
-              <li>Their devices and status</li>
-              <li>Revenue and impression summary</li>
-            </ul>
+      <div class="col-sm-6 col-xl-3">
+        <div class="card h-100">
+          <div class="card-body d-flex flex-column gap-3">
+            <div class="d-flex align-items-center gap-3">
+              <div class="persona-icon persona-icon--venue">🏪</div>
+              <div>
+                <div class="fw-bold">Venue Manager</div>
+                <div class="text-muted small">Business owner / location manager</div>
+              </div>
+            </div>
+            <span class="actor actor--venue align-self-start">venue</span>
+            <div>
+              <div class="text-muted small fw-semibold text-uppercase mb-1" style="letter-spacing:.06em">Goals</div>
+              <ul class="list-unstyled text-muted small mb-0 d-flex flex-column gap-1">
+                <li>Earn passive revenue from existing screens</li>
+                <li>Minimal setup — plug in and done</li>
+                <li>See which screens are active</li>
+                <li>Track earnings over time</li>
+              </ul>
+            </div>
+            <hr class="my-0" />
+            <div>
+              <div class="text-muted small fw-semibold text-uppercase mb-1" style="letter-spacing:.06em">Portal access</div>
+              <ul class="list-unstyled text-muted small mb-0 d-flex flex-column gap-1">
+                <li>Their devices and status</li>
+                <li>Revenue and impression summary</li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
 
       <!-- Advertiser -->
-      <div class="persona-card">
-        <div class="persona-header">
-          <div class="persona-icon persona-icon--adv">📣</div>
-          <div>
-            <div class="persona-name">Advertiser</div>
-            <div class="persona-role">Business or agency buying ad time</div>
-          </div>
-        </div>
-        <div class="persona-body">
-          <span class="persona-tag persona-tag--adv">advertiser</span>
-          <div>
-            <div class="persona-section-label">Goals</div>
-            <ul class="persona-list">
-              <li>Get creatives in front of the right audience</li>
-              <li>Book specific time slots and locations</li>
-              <li>Upload and manage ad creatives</li>
-              <li>Verify ads are actually playing</li>
-            </ul>
-          </div>
-          <hr class="divider" />
-          <div>
-            <div class="persona-section-label">Portal access</div>
-            <ul class="persona-list">
-              <li>Their campaigns and bookings</li>
-              <li>Creative upload</li>
-              <li>Impression reports</li>
-            </ul>
+      <div class="col-sm-6 col-xl-3">
+        <div class="card h-100">
+          <div class="card-body d-flex flex-column gap-3">
+            <div class="d-flex align-items-center gap-3">
+              <div class="persona-icon persona-icon--adv">📣</div>
+              <div>
+                <div class="fw-bold">Advertiser</div>
+                <div class="text-muted small">Business or agency buying ad time</div>
+              </div>
+            </div>
+            <span class="actor actor--advertiser align-self-start">advertiser</span>
+            <div>
+              <div class="text-muted small fw-semibold text-uppercase mb-1" style="letter-spacing:.06em">Goals</div>
+              <ul class="list-unstyled text-muted small mb-0 d-flex flex-column gap-1">
+                <li>Reach the right audience at the right place</li>
+                <li>Book specific time slots and locations</li>
+                <li>Upload and manage ad creatives</li>
+                <li>Verify ads are actually playing</li>
+              </ul>
+            </div>
+            <hr class="my-0" />
+            <div>
+              <div class="text-muted small fw-semibold text-uppercase mb-1" style="letter-spacing:.06em">Portal access</div>
+              <ul class="list-unstyled text-muted small mb-0 d-flex flex-column gap-1">
+                <li>Their campaigns and bookings</li>
+                <li>Creative upload</li>
+                <li>Impression reports</li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
 
       <!-- Device -->
-      <div class="persona-card">
-        <div class="persona-header">
-          <div class="persona-icon persona-icon--device">📺</div>
-          <div>
-            <div class="persona-name">Kiosk Device</div>
-            <div class="persona-role">Android stick at venue — automated actor</div>
-          </div>
-        </div>
-        <div class="persona-body">
-          <span class="persona-tag persona-tag--device">device</span>
-          <div>
-            <div class="persona-section-label">Responsibilities</div>
-            <ul class="persona-list">
-              <li>Register with API on first boot</li>
-              <li>Fetch and cache the ad playlist</li>
-              <li>Display creatives full-screen</li>
-              <li>Report heartbeat every minute</li>
-              <li>Report each impression after playback</li>
-            </ul>
-          </div>
-          <hr class="divider" />
-          <div>
-            <div class="persona-section-label">Auth</div>
-            <ul class="persona-list">
-              <li>Device JWT (non-expiring, RS256)</li>
-              <li>Rate-limited: 30 req/min</li>
-            </ul>
+      <div class="col-sm-6 col-xl-3">
+        <div class="card h-100">
+          <div class="card-body d-flex flex-column gap-3">
+            <div class="d-flex align-items-center gap-3">
+              <div class="persona-icon persona-icon--device">📺</div>
+              <div>
+                <div class="fw-bold">Kiosk Device</div>
+                <div class="text-muted small">Android stick at venue — automated actor</div>
+              </div>
+            </div>
+            <span class="actor actor--device align-self-start">device</span>
+            <div>
+              <div class="text-muted small fw-semibold text-uppercase mb-1" style="letter-spacing:.06em">Responsibilities</div>
+              <ul class="list-unstyled text-muted small mb-0 d-flex flex-column gap-1">
+                <li>Register with API on first boot</li>
+                <li>Fetch and cache the ad playlist</li>
+                <li>Display creatives full-screen</li>
+                <li>Report heartbeat every minute</li>
+                <li>Report each impression after playback</li>
+              </ul>
+            </div>
+            <hr class="my-0" />
+            <div>
+              <div class="text-muted small fw-semibold text-uppercase mb-1" style="letter-spacing:.06em">Auth</div>
+              <ul class="list-unstyled text-muted small mb-0 d-flex flex-column gap-1">
+                <li>Device JWT (non-expiring, RS256)</li>
+                <li>Rate-limited: 30 req/min</li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
@@ -152,288 +161,255 @@
     </div>
   </section>
 
-  <!-- ── Workflow 1: Venue Onboarding ── -->
-  <section class="section">
-    <h2 class="section-title">Workflows</h2>
+  <!-- ── Workflows ── -->
+  <section>
+    <h2 class="section-title mb-4">Workflows</h2>
 
-    <div class="workflow">
-      <div class="workflow-header">
-        <div class="workflow-num">1</div>
-        <div class="workflow-title">Venue Onboarding</div>
-        <div class="workflow-desc">Admin + Venue Manager + Device</div>
+    <!-- Workflow 1 -->
+    <div class="card mb-3">
+      <div class="card-header d-flex align-items-center gap-2 py-3">
+        <span class="phase-num">1</span>
+        <span class="fw-bold">Venue Onboarding</span>
+        <span class="text-muted small ms-auto">Admin + Venue Manager + Device</span>
       </div>
-      <ol class="workflow-steps">
-        <li class="wstep">
-          <div class="wstep-num"></div>
-          <div class="wstep-content">
-            <div class="wstep-actors">
+      <ol class="step-list">
+        <li class="step-item">
+          <div class="flex-grow-1">
+            <div class="step-actors">
               <span class="actor actor--admin">Admin</span>
-              <span class="actor-arrow">→</span>
+              <span class="step-arrow">→</span>
               <span class="actor actor--server">API</span>
             </div>
-            <div class="wstep-desc">Admin creates the venue record in the portal — name, category, address. API returns a venue ID.</div>
+            <div class="step-desc">Admin creates the venue record in the portal — name, category, address. API returns a venue ID.</div>
           </div>
         </li>
-        <li class="wstep">
-          <div class="wstep-num"></div>
-          <div class="wstep-content">
-            <div class="wstep-actors">
+        <li class="step-item">
+          <div class="flex-grow-1">
+            <div class="step-actors">
               <span class="actor actor--venue">Venue Manager</span>
             </div>
-            <div class="wstep-desc">Venue manager receives the AdLite device (Android stick). Plugs it into the TV via HDMI and powers it via USB.</div>
+            <div class="step-desc">Venue manager receives the AdLite device (Android stick). Plugs it into the TV via HDMI and powers it via USB.</div>
           </div>
         </li>
-        <li class="wstep">
-          <div class="wstep-num"></div>
-          <div class="wstep-content">
-            <div class="wstep-actors">
+        <li class="step-item">
+          <div class="flex-grow-1">
+            <div class="step-actors">
               <span class="actor actor--device">Device</span>
-              <span class="actor-arrow">→</span>
+              <span class="step-arrow">→</span>
               <span class="actor actor--server">API</span>
             </div>
-            <div class="wstep-desc">Device boots, connects to WiFi, and calls <code>POST /api/v1/devices/register</code> with its hardware ID and the venue ID. Receives a device JWT for all future requests.</div>
+            <div class="step-desc">Device boots, connects to WiFi, and calls <code>POST /api/v1/devices/register</code> with its hardware ID and venue ID. Receives a device JWT for all future requests.</div>
           </div>
         </li>
-        <li class="wstep">
-          <div class="wstep-num"></div>
-          <div class="wstep-content">
-            <div class="wstep-actors">
+        <li class="step-item">
+          <div class="flex-grow-1">
+            <div class="step-actors">
               <span class="actor actor--admin">Admin</span>
-              <span class="actor-arrow">→</span>
+              <span class="step-arrow">→</span>
               <span class="actor actor--server">API</span>
             </div>
-            <div class="wstep-desc">Admin creates ad slots for the device — label, time window, days of week, duration, and price. Slots start in <code>available</code> status, ready to be booked.</div>
+            <div class="step-desc">Admin creates ad slots for the device — label, time window, days of week, duration, and price. Slots start in <code>available</code> status.</div>
           </div>
         </li>
-        <li class="wstep">
-          <div class="wstep-num"></div>
-          <div class="wstep-content">
-            <div class="wstep-actors">
+        <li class="step-item">
+          <div class="flex-grow-1">
+            <div class="step-actors">
               <span class="actor actor--device">Device</span>
             </div>
-            <div class="wstep-desc">Device begins its playback loop and heartbeat cycle. It shows a default screen until a booking goes active.</div>
+            <div class="step-desc">Device begins its playback loop and heartbeat cycle. Shows a default screen until a booking goes active.</div>
           </div>
         </li>
       </ol>
     </div>
 
-    <!-- ── Workflow 2: Advertiser Campaign ── -->
-    <div class="workflow">
-      <div class="workflow-header">
-        <div class="workflow-num">2</div>
-        <div class="workflow-title">Advertiser Campaign Setup</div>
-        <div class="workflow-desc">Admin + Advertiser</div>
+    <!-- Workflow 2 -->
+    <div class="card mb-3">
+      <div class="card-header d-flex align-items-center gap-2 py-3">
+        <span class="phase-num">2</span>
+        <span class="fw-bold">Advertiser Campaign Setup</span>
+        <span class="text-muted small ms-auto">Admin + Advertiser</span>
       </div>
-      <ol class="workflow-steps">
-        <li class="wstep">
-          <div class="wstep-num"></div>
-          <div class="wstep-content">
-            <div class="wstep-actors">
+      <ol class="step-list">
+        <li class="step-item">
+          <div class="flex-grow-1">
+            <div class="step-actors">
               <span class="actor actor--admin">Admin</span>
-              <span class="actor-arrow">→</span>
+              <span class="step-arrow">→</span>
               <span class="actor actor--server">API</span>
             </div>
-            <div class="wstep-desc">Admin creates an advertiser account — company name and email. Advertiser receives login credentials.</div>
+            <div class="step-desc">Admin creates an advertiser account — company name and email. Advertiser receives login credentials.</div>
           </div>
         </li>
-        <li class="wstep">
-          <div class="wstep-num"></div>
-          <div class="wstep-content">
-            <div class="wstep-actors">
-              <span class="actor actor--adv">Advertiser</span>
-              <span class="actor-arrow">→</span>
+        <li class="step-item">
+          <div class="flex-grow-1">
+            <div class="step-actors">
+              <span class="actor actor--advertiser">Advertiser</span>
+              <span class="step-arrow">→</span>
               <span class="actor actor--server">API</span>
             </div>
-            <div class="wstep-desc">Advertiser logs into the portal and uploads their ad creative (JPEG, PNG, MP4, WebM) via <code>POST /api/v1/assets/upload</code>. File is stored in Cloudflare R2 and a CDN URL is returned.</div>
+            <div class="step-desc">Advertiser uploads their ad creative via <code>POST /api/v1/assets/upload</code>. File is stored in Cloudflare R2 and a CDN URL is returned.</div>
           </div>
         </li>
-        <li class="wstep">
-          <div class="wstep-num"></div>
-          <div class="wstep-content">
-            <div class="wstep-actors">
+        <li class="step-item">
+          <div class="flex-grow-1">
+            <div class="step-actors">
               <span class="actor actor--admin">Admin</span>
-              <span class="actor-arrow">→</span>
+              <span class="step-arrow">→</span>
               <span class="actor actor--server">API</span>
             </div>
-            <div class="wstep-desc">Admin reviews available slots and creates a booking — linking the advertiser, slot, creative URL, date range, and price. Booking starts in <code>pending</code> status.</div>
+            <div class="step-desc">Admin creates a booking — linking the advertiser, slot, creative URL, date range, and price. Booking starts in <code>pending</code> status.</div>
           </div>
         </li>
-        <li class="wstep">
-          <div class="wstep-num"></div>
-          <div class="wstep-content">
-            <div class="wstep-actors">
+        <li class="step-item">
+          <div class="flex-grow-1">
+            <div class="step-actors">
               <span class="actor actor--server">API</span>
             </div>
-            <div class="wstep-desc">On the booking start date the status moves to <code>active</code>. The scheduler includes this creative in the device playlist. Redis cache is invalidated so the device picks it up within 60 seconds.</div>
+            <div class="step-desc">On the booking start date the status moves to <code>active</code>. The scheduler includes this creative in the device playlist. Redis cache expires within 60 seconds.</div>
           </div>
         </li>
       </ol>
     </div>
 
-    <!-- ── Workflow 3: Ad Playback Loop ── -->
-    <div class="workflow">
-      <div class="workflow-header">
-        <div class="workflow-num">3</div>
-        <div class="workflow-title">Ad Playback Loop</div>
-        <div class="workflow-desc">Continuous — runs on every device</div>
+    <!-- Workflow 3 -->
+    <div class="card mb-3">
+      <div class="card-header d-flex align-items-center gap-2 py-3">
+        <span class="phase-num">3</span>
+        <span class="fw-bold">Ad Playback Loop</span>
+        <span class="text-muted small ms-auto">Continuous — runs on every device</span>
       </div>
-      <ol class="workflow-steps">
-        <li class="wstep">
-          <div class="wstep-num"></div>
-          <div class="wstep-content">
-            <div class="wstep-actors">
+      <ol class="step-list">
+        <li class="step-item">
+          <div class="flex-grow-1">
+            <div class="step-actors">
               <span class="actor actor--device">Device</span>
-              <span class="actor-arrow">→</span>
+              <span class="step-arrow">→</span>
               <span class="actor actor--server">API</span>
             </div>
-            <div class="wstep-desc">Device requests its current playlist from the scheduler. API checks Redis first (<code>playlist:{deviceID}</code>, 60s TTL), falls back to Postgres if cache is cold.</div>
+            <div class="step-desc">Device requests its current playlist. API checks Redis first (<code>playlist:{deviceID}</code>, 60s TTL), falls back to Postgres on cache miss.</div>
           </div>
         </li>
-        <li class="wstep">
-          <div class="wstep-num"></div>
-          <div class="wstep-content">
-            <div class="wstep-actors">
+        <li class="step-item">
+          <div class="flex-grow-1">
+            <div class="step-actors">
               <span class="actor actor--device">Device</span>
             </div>
-            <div class="wstep-desc">Device displays each creative full-screen for its configured duration (15s or 30s). Cycles through all active bookings in the playlist in order.</div>
+            <div class="step-desc">Device displays each creative full-screen for its configured duration (15s or 30s), cycling through all active bookings in order.</div>
           </div>
         </li>
-        <li class="wstep">
-          <div class="wstep-num"></div>
-          <div class="wstep-content">
-            <div class="wstep-actors">
+        <li class="step-item">
+          <div class="flex-grow-1">
+            <div class="step-actors">
               <span class="actor actor--device">Device</span>
-              <span class="actor-arrow">→</span>
+              <span class="step-arrow">→</span>
               <span class="actor actor--server">API</span>
             </div>
-            <div class="wstep-desc">After each play, device calls <code>POST /api/v1/devices/{id}/impression</code> with the booking ID. API logs the impression to the database for reporting.</div>
+            <div class="step-desc">After each play, device calls <code>POST /api/v1/devices/{id}/impression</code> with the booking ID. API logs the impression for reporting.</div>
           </div>
         </li>
-        <li class="wstep">
-          <div class="wstep-num"></div>
-          <div class="wstep-content">
-            <div class="wstep-actors">
+        <li class="step-item">
+          <div class="flex-grow-1">
+            <div class="step-actors">
               <span class="actor actor--device">Device</span>
-              <span class="actor-arrow">→</span>
+              <span class="step-arrow">→</span>
               <span class="actor actor--server">API</span>
             </div>
-            <div class="wstep-desc">Every minute, device calls <code>POST /api/v1/devices/{id}/heartbeat</code>. API updates <code>status = online</code> and <code>last_seen</code>. A device with no heartbeat for 5+ minutes is shown as offline in the admin panel.</div>
-            <div class="wstep-note">Rate limited to 30 req/min per device across heartbeat + impression combined.</div>
+            <div class="step-desc">Every minute, device sends <code>POST /api/v1/devices/{id}/heartbeat</code>. API updates <code>status = online</code> and <code>last_seen</code>.</div>
+            <div class="step-note mt-1">Rate limited to 30 req/min per device across heartbeat + impression combined.</div>
           </div>
         </li>
       </ol>
     </div>
 
-    <!-- ── Workflow 4: Booking Lifecycle ── -->
-    <div class="workflow">
-      <div class="workflow-header">
-        <div class="workflow-num">4</div>
-        <div class="workflow-title">Booking Lifecycle</div>
-        <div class="workflow-desc">Status transitions for a campaign</div>
+    <!-- Workflow 4 -->
+    <div class="card mb-3">
+      <div class="card-header d-flex align-items-center gap-2 py-3">
+        <span class="phase-num">4</span>
+        <span class="fw-bold">Booking Lifecycle</span>
+        <span class="text-muted small ms-auto">Status transitions for a campaign</span>
       </div>
-      <ol class="workflow-steps">
-        <li class="wstep">
-          <div class="wstep-num"></div>
-          <div class="wstep-content">
-            <div class="wstep-actors">
-              <span class="actor actor--admin">Admin</span>
-            </div>
-            <div class="wstep-desc">Booking is created. Status: <code>pending</code>. Creative URL and date range are set. Slot status moves to <code>booked</code>.</div>
+      <ol class="step-list">
+        <li class="step-item">
+          <div class="flex-grow-1">
+            <div class="step-actors"><span class="actor actor--admin">Admin</span></div>
+            <div class="step-desc">Booking created. Status: <code>pending</code>. Slot status moves to <code>booked</code>.</div>
           </div>
         </li>
-        <li class="wstep">
-          <div class="wstep-num"></div>
-          <div class="wstep-content">
-            <div class="wstep-actors">
-              <span class="actor actor--server">API</span>
-            </div>
-            <div class="wstep-desc">On <code>starts_on</code> date the booking becomes <code>active</code>. The scheduler begins including it in playlists. Impressions start accumulating.</div>
+        <li class="step-item">
+          <div class="flex-grow-1">
+            <div class="step-actors"><span class="actor actor--server">API</span></div>
+            <div class="step-desc">On <code>starts_on</code> date the booking becomes <code>active</code>. Scheduler begins including it in playlists.</div>
           </div>
         </li>
-        <li class="wstep">
-          <div class="wstep-num"></div>
-          <div class="wstep-content">
-            <div class="wstep-actors">
-              <span class="actor actor--adv">Advertiser</span>
-            </div>
-            <div class="wstep-desc">Advertiser can view impression counts in the portal throughout the campaign to verify delivery.</div>
+        <li class="step-item">
+          <div class="flex-grow-1">
+            <div class="step-actors"><span class="actor actor--advertiser">Advertiser</span></div>
+            <div class="step-desc">Advertiser views impression counts in the portal throughout the campaign to verify delivery.</div>
           </div>
         </li>
-        <li class="wstep">
-          <div class="wstep-num"></div>
-          <div class="wstep-content">
-            <div class="wstep-actors">
-              <span class="actor actor--server">API</span>
-            </div>
-            <div class="wstep-desc">On <code>ends_on</code> date the booking moves to <code>completed</code>. The slot returns to <code>available</code> and can be sold again.</div>
+        <li class="step-item">
+          <div class="flex-grow-1">
+            <div class="step-actors"><span class="actor actor--server">API</span></div>
+            <div class="step-desc">On <code>ends_on</code> date the booking moves to <code>completed</code>. The slot returns to <code>available</code> and can be sold again.</div>
           </div>
         </li>
-        <li class="wstep">
-          <div class="wstep-num"></div>
-          <div class="wstep-content">
-            <div class="wstep-actors">
-              <span class="actor actor--admin">Admin</span>
-            </div>
-            <div class="wstep-desc">Admin can cancel a booking at any point, setting status to <code>cancelled</code> and freeing the slot immediately.</div>
+        <li class="step-item">
+          <div class="flex-grow-1">
+            <div class="step-actors"><span class="actor actor--admin">Admin</span></div>
+            <div class="step-desc">Admin can cancel a booking at any point, setting status to <code>cancelled</code> and freeing the slot immediately.</div>
           </div>
         </li>
       </ol>
     </div>
 
-    <!-- ── Workflow 5: Auth & Session ── -->
-    <div class="workflow">
-      <div class="workflow-header">
-        <div class="workflow-num">5</div>
-        <div class="workflow-title">User Authentication &amp; Session</div>
-        <div class="workflow-desc">Admin, Venue Manager, Advertiser</div>
+    <!-- Workflow 5 -->
+    <div class="card">
+      <div class="card-header d-flex align-items-center gap-2 py-3">
+        <span class="phase-num">5</span>
+        <span class="fw-bold">User Authentication &amp; Session</span>
+        <span class="text-muted small ms-auto">Admin, Venue Manager, Advertiser</span>
       </div>
-      <ol class="workflow-steps">
-        <li class="wstep">
-          <div class="wstep-num"></div>
-          <div class="wstep-content">
-            <div class="wstep-actors">
+      <ol class="step-list">
+        <li class="step-item">
+          <div class="flex-grow-1">
+            <div class="step-actors">
               <span class="actor actor--admin">Admin</span>
-              <span class="actor-arrow">/</span>
+              <span class="step-arrow">/</span>
               <span class="actor actor--venue">Venue</span>
-              <span class="actor-arrow">/</span>
-              <span class="actor actor--adv">Advertiser</span>
-              <span class="actor-arrow">→</span>
+              <span class="step-arrow">/</span>
+              <span class="actor actor--advertiser">Advertiser</span>
+              <span class="step-arrow">→</span>
               <span class="actor actor--server">API</span>
             </div>
-            <div class="wstep-desc">User submits email + password to <code>POST /api/v1/auth/login</code>. API verifies bcrypt hash, issues an access token (15 min, RS256) and a refresh token (7 days).</div>
+            <div class="step-desc">User submits email + password to <code>POST /api/v1/auth/login</code>. API verifies bcrypt hash, issues an access token (15 min) and a refresh token (7 days).</div>
           </div>
         </li>
-        <li class="wstep">
-          <div class="wstep-num"></div>
-          <div class="wstep-content">
-            <div class="wstep-actors">
-              <span class="actor actor--server">Portal</span>
-            </div>
-            <div class="wstep-desc">Portal stores both tokens in <code>localStorage</code>. Access token is attached as <code>Authorization: Bearer</code> on every API request. Role decoded from JWT payload to show the correct nav and pages.</div>
+        <li class="step-item">
+          <div class="flex-grow-1">
+            <div class="step-actors"><span class="actor actor--server">Portal</span></div>
+            <div class="step-desc">Tokens stored in <code>localStorage</code>. Access token sent as <code>Authorization: Bearer</code>. Role decoded from JWT payload to show the correct nav and pages.</div>
           </div>
         </li>
-        <li class="wstep">
-          <div class="wstep-num"></div>
-          <div class="wstep-content">
-            <div class="wstep-actors">
+        <li class="step-item">
+          <div class="flex-grow-1">
+            <div class="step-actors">
               <span class="actor actor--server">Portal</span>
-              <span class="actor-arrow">→</span>
+              <span class="step-arrow">→</span>
               <span class="actor actor--server">API</span>
             </div>
-            <div class="wstep-desc">When the access token is expired, the portal automatically calls <code>POST /api/v1/auth/refresh</code> with the refresh token. A new token pair is issued and the original request retries transparently.</div>
+            <div class="step-desc">When the access token expires, the portal automatically calls <code>POST /api/v1/auth/refresh</code>. A new token pair is issued and the original request retries transparently.</div>
           </div>
         </li>
-        <li class="wstep">
-          <div class="wstep-num"></div>
-          <div class="wstep-content">
-            <div class="wstep-actors">
+        <li class="step-item">
+          <div class="flex-grow-1">
+            <div class="step-actors">
               <span class="actor actor--admin">Admin</span>
-              <span class="actor-arrow">/</span>
+              <span class="step-arrow">/</span>
               <span class="actor actor--venue">Venue</span>
-              <span class="actor-arrow">/</span>
-              <span class="actor actor--adv">Advertiser</span>
+              <span class="step-arrow">/</span>
+              <span class="actor actor--advertiser">Advertiser</span>
             </div>
-            <div class="wstep-desc">On logout, tokens are cleared from <code>localStorage</code>. The refresh token is deleted server-side so it cannot be reused.</div>
+            <div class="step-desc">On logout, tokens are cleared from <code>localStorage</code> and the refresh token is deleted server-side so it cannot be reused.</div>
           </div>
         </li>
       </ol>
@@ -443,7 +419,9 @@
 
 </main>
 
-<footer class="site-footer">AdLite — personas &amp; workflows reference</footer>
+<footer class="site-footer text-center py-4 mt-2 text-muted small">
+  AdLite — personas &amp; workflows reference
+</footer>
 
 </body>
 </html>

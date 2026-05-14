@@ -1,45 +1,45 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AdLite — Local Dev Startup</title>
-  <link rel="stylesheet" href="local-dev.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="custom.css" />
 </head>
 <body>
 
-<header class="site-header">
-  <div class="header-inner">
-    <div class="brand-name">AdLite</div>
-    <div class="brand-sub">Local dev startup guide — run these commands before logging in</div>
+<header id="site-header" class="py-4">
+  <div class="container-lg px-4">
+    <h1 class="brand-name">AdLite</h1>
+    <p class="brand-sub mb-0">Local dev startup guide — run these commands before logging in</p>
   </div>
 </header>
 
-<main>
+<main class="container-lg px-4 py-5 d-flex flex-column gap-4">
 
-  <!-- Badges legend -->
-  <div>
-    <span class="badge badge--once">One-time setup</span> — only run once, ever.
-    &nbsp;
-    <span class="badge badge--every">Every time</span> — run each dev session.
+  <!-- Legend -->
+  <div class="d-flex gap-3 flex-wrap align-items-center">
+    <span class="badge text-bg-warning">One-time setup</span><span class="text-muted small">— only run once, ever.</span>
+    <span class="badge text-bg-success ms-3">Every time</span><span class="text-muted small">— run each dev session.</span>
   </div>
 
   <!-- Step 1 -->
   <div>
-    <div class="section-title">Step 1 <span class="badge badge--once">One-time setup</span></div>
-    <div class="step-card">
-      <div class="step-card-header">
-        <div class="step-num">1</div>
-        <div class="step-label">Generate JWT keypair and add to .env</div>
+    <div class="d-flex align-items-center gap-2 mb-2">
+      <span class="text-muted small fw-semibold text-uppercase" style="letter-spacing:.07em">Step 1</span>
+      <span class="badge text-bg-warning">One-time setup</span>
+    </div>
+    <div class="card">
+      <div class="card-header d-flex align-items-center gap-2 py-3">
+        <span class="phase-num">1</span>
+        <span class="fw-bold">Generate JWT keypair and add to .env</span>
       </div>
-      <div class="step-card-body">
-        <div class="step-desc">
-          Generates an RSA keypair and appends the base64-encoded values to <code>server/.env</code>.
-          Only do this once — regenerating will invalidate any existing tokens.
-        </div>
-        <div class="cmd-wrap">
+      <div class="card-body d-flex flex-column gap-3">
+        <p class="text-muted small mb-0">Generates an RSA keypair and appends the base64-encoded values to <code>server/.env</code>. Only do this once — regenerating will invalidate any existing tokens.</p>
+        <div>
           <div class="cmd-label">Run in: <code>server/</code></div>
-          <pre>cd /Users/hephaestus/Projects/ad_lite/server
+          <div class="cmd-block">cd /Users/hephaestus/Projects/ad_lite/server
 
 openssl genrsa -out /tmp/adlite.pem 2048
 openssl rsa -in /tmp/adlite.pem -pubout -out /tmp/adlite.pub
@@ -48,9 +48,9 @@ echo "JWT_PRIVATE_KEY_B64=$(base64 -i /tmp/adlite.pem)" >> .env
 echo "JWT_PUBLIC_KEY_B64=$(base64 -i /tmp/adlite.pub)" >> .env
 echo "PORTAL_ORIGIN=http://localhost:3000" >> .env
 
-rm /tmp/adlite.pem /tmp/adlite.pub</pre>
+rm /tmp/adlite.pem /tmp/adlite.pub</div>
         </div>
-        <div class="warning">
+        <div class="callout-warning">
           <strong>Check first:</strong> run <code>grep JWT_PRIVATE_KEY_B64 .env</code> — if it already has a value, skip this step.
         </div>
       </div>
@@ -59,25 +59,25 @@ rm /tmp/adlite.pem /tmp/adlite.pub</pre>
 
   <!-- Step 2 -->
   <div>
-    <div class="section-title">Step 2 <span class="badge badge--every">Every time</span></div>
-    <div class="step-card">
-      <div class="step-card-header">
-        <div class="step-num">2</div>
-        <div class="step-label">Start Postgres and Redis</div>
-        <div class="step-note">Terminal 1</div>
+    <div class="d-flex align-items-center gap-2 mb-2">
+      <span class="text-muted small fw-semibold text-uppercase" style="letter-spacing:.07em">Step 2</span>
+      <span class="badge text-bg-success">Every time</span>
+      <span class="text-muted small ms-auto">Terminal 1</span>
+    </div>
+    <div class="card">
+      <div class="card-header d-flex align-items-center gap-2 py-3">
+        <span class="phase-num">2</span>
+        <span class="fw-bold">Start Postgres and Redis</span>
       </div>
-      <div class="step-card-body">
-        <div class="step-desc">
-          Starts the database and cache in the background. Safe to run if they're already up.
-        </div>
-        <div class="cmd-wrap">
+      <div class="card-body d-flex flex-column gap-3">
+        <p class="text-muted small mb-0">Starts the database and cache in the background. Safe to run if they're already up.</p>
+        <div>
           <div class="cmd-label">Run in: <code>server/</code></div>
-          <pre>cd /Users/hephaestus/Projects/ad_lite/server
-docker compose up -d</pre>
+          <div class="cmd-block">cd /Users/hephaestus/Projects/ad_lite/server
+docker compose up -d</div>
         </div>
-        <div class="warning">
-          <strong>First time only (or after a reset):</strong> if you wiped the Docker volume, the migrations run automatically on first boot.
-          Wait ~5 seconds for Postgres to be ready before running the seed.
+        <div class="callout-warning">
+          <strong>First time only (or after a reset):</strong> if you wiped the Docker volume, migrations run automatically on first boot. Wait ~5 seconds before running the seed.
         </div>
       </div>
     </div>
@@ -85,21 +85,22 @@ docker compose up -d</pre>
 
   <!-- Step 3 -->
   <div>
-    <div class="section-title">Step 3 <span class="badge badge--every">Every time</span></div>
-    <div class="step-card">
-      <div class="step-card-header">
-        <div class="step-num">3</div>
-        <div class="step-label">Seed the database</div>
-        <div class="step-note">Terminal 1 (same window)</div>
+    <div class="d-flex align-items-center gap-2 mb-2">
+      <span class="text-muted small fw-semibold text-uppercase" style="letter-spacing:.07em">Step 3</span>
+      <span class="badge text-bg-success">Every time</span>
+      <span class="text-muted small ms-auto">Terminal 1 (same window)</span>
+    </div>
+    <div class="card">
+      <div class="card-header d-flex align-items-center gap-2 py-3">
+        <span class="phase-num">3</span>
+        <span class="fw-bold">Seed the database</span>
       </div>
-      <div class="step-card-body">
-        <div class="step-desc">
-          Creates the admin user and demo data. Safe to re-run — it checks before inserting and skips existing records.
-        </div>
-        <div class="cmd-wrap">
+      <div class="card-body d-flex flex-column gap-3">
+        <p class="text-muted small mb-0">Creates the admin user and demo data. Safe to re-run — skips existing records.</p>
+        <div>
           <div class="cmd-label">Run in: <code>server/</code></div>
-          <pre>cd /Users/hephaestus/Projects/ad_lite/server
-go run ./cmd/seed/main.go -demo</pre>
+          <div class="cmd-block">cd /Users/hephaestus/Projects/ad_lite/server
+go run ./cmd/seed/main.go -demo</div>
         </div>
       </div>
     </div>
@@ -107,26 +108,26 @@ go run ./cmd/seed/main.go -demo</pre>
 
   <!-- Step 4 -->
   <div>
-    <div class="section-title">Step 4 <span class="badge badge--every">Every time</span></div>
-    <div class="step-card">
-      <div class="step-card-header">
-        <div class="step-num">4</div>
-        <div class="step-label">Start the Go API server</div>
-        <div class="step-note">Terminal 2</div>
+    <div class="d-flex align-items-center gap-2 mb-2">
+      <span class="text-muted small fw-semibold text-uppercase" style="letter-spacing:.07em">Step 4</span>
+      <span class="badge text-bg-success">Every time</span>
+      <span class="text-muted small ms-auto">Terminal 2</span>
+    </div>
+    <div class="card">
+      <div class="card-header d-flex align-items-center gap-2 py-3">
+        <span class="phase-num">4</span>
+        <span class="fw-bold">Start the Go API server</span>
       </div>
-      <div class="step-card-body">
-        <div class="step-desc">
-          Starts the API on <strong>:8080</strong>. Keep this terminal open — it shows request logs.
-          If port 8080 is already in use, kill the old process first.
-        </div>
-        <div class="cmd-wrap">
+      <div class="card-body d-flex flex-column gap-3">
+        <p class="text-muted small mb-0">Starts the API on <strong>:8080</strong>. Keep this terminal open — it shows request logs.</p>
+        <div>
           <div class="cmd-label">Run in: <code>server/</code></div>
-          <pre>cd /Users/hephaestus/Projects/ad_lite/server
-go run ./cmd/api/main.go</pre>
+          <div class="cmd-block">cd /Users/hephaestus/Projects/ad_lite/server
+go run ./cmd/api/main.go</div>
         </div>
-        <div class="cmd-wrap">
+        <div>
           <div class="cmd-label">If port 8080 is already in use:</div>
-          <pre>lsof -ti :8080 | xargs kill -9</pre>
+          <div class="cmd-block">lsof -ti :8080 | xargs kill -9</div>
         </div>
       </div>
     </div>
@@ -134,26 +135,27 @@ go run ./cmd/api/main.go</pre>
 
   <!-- Step 5 -->
   <div>
-    <div class="section-title">Step 5 <span class="badge badge--every">Every time</span></div>
-    <div class="step-card">
-      <div class="step-card-header">
-        <div class="step-num">5</div>
-        <div class="step-label">Start the Nuxt portal</div>
-        <div class="step-note">Terminal 3</div>
+    <div class="d-flex align-items-center gap-2 mb-2">
+      <span class="text-muted small fw-semibold text-uppercase" style="letter-spacing:.07em">Step 5</span>
+      <span class="badge text-bg-success">Every time</span>
+      <span class="text-muted small ms-auto">Terminal 3</span>
+    </div>
+    <div class="card">
+      <div class="card-header d-flex align-items-center gap-2 py-3">
+        <span class="phase-num">5</span>
+        <span class="fw-bold">Start the Nuxt portal</span>
       </div>
-      <div class="step-card-body">
-        <div class="step-desc">
-          Starts the frontend on <strong>:3000</strong>. First run will take ~15 seconds to compile.
-        </div>
-        <div class="cmd-wrap">
+      <div class="card-body d-flex flex-column gap-3">
+        <p class="text-muted small mb-0">Starts the frontend on <strong>:3000</strong>. First run will take ~15 seconds to compile.</p>
+        <div>
           <div class="cmd-label">First time only — install dependencies:</div>
-          <pre>cd /Users/hephaestus/Projects/ad_lite/portal
-npm install</pre>
+          <div class="cmd-block">cd /Users/hephaestus/Projects/ad_lite/portal
+npm install</div>
         </div>
-        <div class="cmd-wrap">
+        <div>
           <div class="cmd-label">Every time — start dev server:</div>
-          <pre>cd /Users/hephaestus/Projects/ad_lite/portal
-npm run dev</pre>
+          <div class="cmd-block">cd /Users/hephaestus/Projects/ad_lite/portal
+npm run dev</div>
         </div>
       </div>
     </div>
@@ -161,70 +163,78 @@ npm run dev</pre>
 
   <!-- Login -->
   <div>
-    <div class="section-title">Login</div>
-    <div class="creds-card">
-      <div class="creds-header">Admin credentials (seeded defaults)</div>
-      <dl>
-        <div class="creds-row">
-          <dt class="creds-key">Email</dt>
-          <dd class="creds-val">admin@adlite.com</dd>
-        </div>
-        <div class="creds-row">
-          <dt class="creds-key">Password</dt>
-          <dd class="creds-val">changeme</dd>
-        </div>
-      </dl>
+    <div class="text-muted small fw-semibold text-uppercase mb-2" style="letter-spacing:.07em">Login</div>
+    <div class="card">
+      <div class="card-header fw-bold py-3" style="background:#3b0764;color:#d8b4fe;">Admin credentials (seeded defaults)</div>
+      <div class="card-body p-0">
+        <table class="table table-dark table-sm mb-0">
+          <tbody>
+            <tr>
+              <th class="text-muted fw-normal ps-3" style="width:120px">Email</th>
+              <td><code>admin@adlite.com</code></td>
+            </tr>
+            <tr>
+              <th class="text-muted fw-normal ps-3">Password</th>
+              <td><code>changeme</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
   <!-- URLs -->
   <div>
-    <div class="section-title">Local URLs</div>
-    <div class="urls-card">
-      <div class="urls-header">Services</div>
-      <div class="url-row">
-        <div class="url-label">Portal (Nuxt)</div>
-        <a href="http://localhost:3000" target="_blank">http://localhost:3000</a>
-      </div>
-      <div class="url-row">
-        <div class="url-label">API server</div>
-        <a href="http://localhost:8080" target="_blank">http://localhost:8080</a>
-      </div>
-      <div class="url-row">
-        <div class="url-label">Health check</div>
-        <a href="http://localhost:8080/health" target="_blank">http://localhost:8080/health</a>
-      </div>
-      <div class="url-row">
-        <div class="url-label">Postgres</div>
-        <span class="creds-val">localhost:5432 &nbsp;·&nbsp; db: adlite &nbsp;·&nbsp; user: adlite &nbsp;·&nbsp; pass: adlite</span>
-      </div>
-      <div class="url-row">
-        <div class="url-label">Redis</div>
-        <span class="creds-val">localhost:6379</span>
+    <div class="text-muted small fw-semibold text-uppercase mb-2" style="letter-spacing:.07em">Local URLs</div>
+    <div class="card">
+      <div class="card-header fw-bold py-3">Services</div>
+      <div class="card-body p-0">
+        <table class="table table-dark table-sm mb-0">
+          <tbody>
+            <tr>
+              <th class="text-muted fw-normal ps-3" style="width:160px">Portal (Nuxt)</th>
+              <td><a href="http://localhost:3000" target="_blank">http://localhost:3000</a></td>
+            </tr>
+            <tr>
+              <th class="text-muted fw-normal ps-3">API server</th>
+              <td><a href="http://localhost:8080" target="_blank">http://localhost:8080</a></td>
+            </tr>
+            <tr>
+              <th class="text-muted fw-normal ps-3">Health check</th>
+              <td><a href="http://localhost:8080/health" target="_blank">http://localhost:8080/health</a></td>
+            </tr>
+            <tr>
+              <th class="text-muted fw-normal ps-3">Postgres</th>
+              <td><code>localhost:5432 · db: adlite · user: adlite · pass: adlite</code></td>
+            </tr>
+            <tr>
+              <th class="text-muted fw-normal ps-3">Redis</th>
+              <td><code>localhost:6379</code></td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
 
-  <!-- Reset -->
+  <!-- Nuclear reset -->
   <div>
-    <div class="section-title">Nuclear reset — wipe all data and start fresh</div>
-    <div class="step-card">
-      <div class="step-card-body">
-        <div class="step-desc">
-          Destroys the Postgres and Redis volumes. All data is lost. Migrations re-run automatically on next <code>docker compose up</code>.
-        </div>
-        <div class="cmd-wrap">
-          <pre>cd /Users/hephaestus/Projects/ad_lite/server
+    <div class="text-muted small fw-semibold text-uppercase mb-2" style="letter-spacing:.07em">Nuclear reset — wipe all data and start fresh</div>
+    <div class="card">
+      <div class="card-body d-flex flex-column gap-3">
+        <p class="text-muted small mb-0">Destroys the Postgres and Redis volumes. All data is lost. Migrations re-run automatically on next <code>docker compose up</code>.</p>
+        <div class="cmd-block">cd /Users/hephaestus/Projects/ad_lite/server
 docker compose down -v
-docker compose up -d</pre>
-        </div>
+docker compose up -d</div>
       </div>
     </div>
   </div>
 
 </main>
 
-<footer class="site-footer">AdLite local dev reference</footer>
+<footer class="site-footer text-center py-4 mt-2 text-muted small">
+  AdLite local dev reference
+</footer>
 
 </body>
 </html>
