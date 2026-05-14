@@ -36,104 +36,54 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="page">
-    <h1 class="page__title">Dashboard</h1>
+  <div>
+    <h1 class="h4 fw-bold mb-4">Dashboard</h1>
 
-    <p v-if="errorMessage" class="error-text">{{ errorMessage }}</p>
+    <div v-if="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
 
-    <div class="stats-grid" :class="{ loading: loading }">
+    <div class="row g-3">
       <template v-if="loading">
-        <div v-for="n in 4" :key="n" class="stat-card stat-card--skeleton" />
+        <div v-for="n in 4" :key="n" class="col-6 col-md-3">
+          <div class="skeleton" />
+        </div>
       </template>
       <template v-else>
-        <div class="stat-card">
-          <div class="stat-card__value">{{ venues.length }}</div>
-          <div class="stat-card__label">Total Venues</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-card__value">{{ advertisers.length }}</div>
-          <div class="stat-card__label">Total Advertisers</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-card__value">
-            {{ devices.length }}
-            <span class="stat-card__sub">{{ onlineCount }} online</span>
+        <div class="col-6 col-md-3">
+          <div class="card h-100">
+            <div class="card-body">
+              <div class="fs-2 fw-bold">{{ venues.length }}</div>
+              <div class="text-muted small">Total Venues</div>
+            </div>
           </div>
-          <div class="stat-card__label">Total Devices</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-card__value">{{ bookings.length }}</div>
-          <div class="stat-card__label">Total Bookings</div>
+        <div class="col-6 col-md-3">
+          <div class="card h-100">
+            <div class="card-body">
+              <div class="fs-2 fw-bold">{{ advertisers.length }}</div>
+              <div class="text-muted small">Total Advertisers</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="card h-100">
+            <div class="card-body">
+              <div class="fs-2 fw-bold">
+                {{ devices.length }}
+                <span class="fs-6 fw-normal text-success">{{ onlineCount }} online</span>
+              </div>
+              <div class="text-muted small">Total Devices</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="card h-100">
+            <div class="card-body">
+              <div class="fs-2 fw-bold">{{ bookings.length }}</div>
+              <div class="text-muted small">Total Bookings</div>
+            </div>
+          </div>
         </div>
       </template>
     </div>
   </div>
 </template>
-
-<style scoped>
-.page {
-  max-width: 1100px;
-}
-
-.page__title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin-bottom: 1.5rem;
-  color: var(--color-text);
-}
-
-.error-text {
-  color: var(--color-danger);
-  font-size: 0.875rem;
-  margin-bottom: 1rem;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1rem;
-}
-
-.stats-grid.loading {
-  opacity: 0.5;
-}
-
-.stat-card {
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  padding: 1.5rem;
-}
-
-.stat-card--skeleton {
-  height: 100px;
-  background-color: #e2e8f0;
-  animation: pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-.stat-card__value {
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--color-text);
-  display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
-}
-
-.stat-card__sub {
-  font-size: 0.875rem;
-  font-weight: 400;
-  color: var(--color-success);
-}
-
-.stat-card__label {
-  font-size: 0.875rem;
-  color: var(--color-text-muted);
-  margin-top: 0.25rem;
-}
-</style>

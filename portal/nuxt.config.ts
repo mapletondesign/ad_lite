@@ -12,6 +12,12 @@ export default defineNuxtConfig({
     strict: true,
   },
 
-  css: ['~/assets/css/main.css'],
+  app: {
+    head: {
+      htmlAttrs: { 'data-bs-theme': 'dark' },
+    },
+  },
+
+  css: ['bootstrap/dist/css/bootstrap.min.css', '~/assets/css/main.css'],
   compatibilityDate: '2026-05-13',
 })

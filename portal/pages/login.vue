@@ -33,105 +33,34 @@ async function handleSubmit() {
 </script>
 
 <template>
-  <form class="login-form" @submit.prevent="handleSubmit">
-    <div class="form-group">
+  <form @submit.prevent="handleSubmit">
+    <div class="mb-3">
       <label class="form-label" for="email">Email</label>
       <input
         id="email"
         v-model="email"
-        class="form-input"
+        class="form-control"
         type="email"
         required
         autocomplete="email"
         placeholder="you@example.com"
       />
     </div>
-    <div class="form-group">
+    <div class="mb-3">
       <label class="form-label" for="password">Password</label>
       <input
         id="password"
         v-model="password"
-        class="form-input"
+        class="form-control"
         type="password"
         required
         autocomplete="current-password"
         placeholder="••••••••"
       />
     </div>
-    <p v-if="errorMessage" class="form-error">{{ errorMessage }}</p>
-    <button class="btn btn--primary btn--full" type="submit" :disabled="loading">
+    <div v-if="errorMessage" class="alert alert-danger py-2 small">{{ errorMessage }}</div>
+    <button class="btn btn-primary w-100" type="submit" :disabled="loading">
       {{ loading ? 'Signing in…' : 'Sign in' }}
     </button>
   </form>
 </template>
-
-<style scoped>
-.login-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.375rem;
-}
-
-.form-label {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--color-text);
-}
-
-.form-input {
-  width: 100%;
-  padding: 0.625rem 0.75rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  font-size: 0.9375rem;
-  color: var(--color-text);
-  background-color: var(--color-surface);
-  transition: border-color 0.15s;
-}
-
-.form-input:focus {
-  outline: none;
-  border-color: var(--color-accent);
-}
-
-.form-error {
-  font-size: 0.875rem;
-  color: var(--color-danger);
-}
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.625rem 1.25rem;
-  border-radius: var(--radius);
-  font-size: 0.9375rem;
-  font-weight: 500;
-  border: 1px solid transparent;
-  transition: opacity 0.15s;
-}
-
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn--primary {
-  background-color: var(--color-accent);
-  color: #ffffff;
-}
-
-.btn--primary:hover:not(:disabled) {
-  opacity: 0.9;
-}
-
-.btn--full {
-  width: 100%;
-}
-</style>

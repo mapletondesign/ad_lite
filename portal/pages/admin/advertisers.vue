@@ -55,41 +55,43 @@ onMounted(loadAdvertisers)
 </script>
 
 <template>
-  <div class="page">
-    <div class="page__header">
-      <h1 class="page__title">Advertisers</h1>
-      <button class="btn btn--primary" @click="showForm = !showForm">
+  <div>
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <h1 class="h4 fw-bold mb-0">Advertisers</h1>
+      <button class="btn btn-primary btn-sm" @click="showForm = !showForm">
         {{ showForm ? 'Cancel' : 'Add Advertiser' }}
       </button>
     </div>
 
-    <div v-if="showForm" class="inline-form">
-      <h2 class="inline-form__title">New Advertiser</h2>
-      <form @submit.prevent="handleSubmit">
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label" for="name">Name <span class="required">*</span></label>
-            <input id="name" v-model="form.name" class="form-input" type="text" required />
+    <div v-if="showForm" class="card mb-4">
+      <div class="card-header fw-semibold">New Advertiser</div>
+      <div class="card-body">
+        <form @submit.prevent="handleSubmit">
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label" for="name">Name <span class="text-danger">*</span></label>
+              <input id="name" v-model="form.name" class="form-control" type="text" required />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="email">Email <span class="text-danger">*</span></label>
+              <input id="email" v-model="form.email" class="form-control" type="email" required />
+            </div>
           </div>
-          <div class="form-group">
-            <label class="form-label" for="email">Email <span class="required">*</span></label>
-            <input id="email" v-model="form.email" class="form-input" type="email" required />
+          <div v-if="formError" class="alert alert-danger py-2 small">{{ formError }}</div>
+          <div class="d-flex justify-content-end">
+            <button class="btn btn-primary" type="submit" :disabled="submitting">
+              {{ submitting ? 'Saving…' : 'Save Advertiser' }}
+            </button>
           </div>
-        </div>
-        <p v-if="formError" class="form-error">{{ formError }}</p>
-        <div class="form-actions">
-          <button class="btn btn--primary" type="submit" :disabled="submitting">
-            {{ submitting ? 'Saving…' : 'Save Advertiser' }}
-          </button>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
 
-    <p v-if="errorMessage" class="error-text">{{ errorMessage }}</p>
+    <div v-if="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
 
-    <div class="table-wrap" :class="{ loading: loading }">
-      <p v-if="loading" class="loading-text">Loading…</p>
-      <table v-else class="data-table">
+    <div class="card" :class="{ 'opacity-50': loading }">
+      <div v-if="loading" class="card-body text-muted">Loading…</div>
+      <table v-else class="table table-dark table-hover mb-0">
         <thead>
           <tr>
             <th>Name</th>
@@ -104,176 +106,10 @@ onMounted(loadAdvertisers)
             <td>{{ formatDate(advertiser.created_at) }}</td>
           </tr>
           <tr v-if="advertisers.length === 0">
-            <td colspan="3" class="empty-cell">No advertisers yet.</td>
+            <td colspan="3" class="text-center text-muted">No advertisers yet.</td>
           </tr>
         </tbody>
       </table>
     </div>
   </div>
 </template>
-
-<style scoped>
-.page {
-  max-width: 1100px;
-}
-
-.page__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1.5rem;
-}
-
-.page__title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--color-text);
-}
-
-.error-text {
-  color: var(--color-danger);
-  font-size: 0.875rem;
-  margin-bottom: 1rem;
-}
-
-.inline-form {
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-}
-
-.inline-form__title {
-  font-size: 1rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.375rem;
-  margin-bottom: 1rem;
-}
-
-.form-label {
-  font-size: 0.875rem;
-  font-weight: 500;
-}
-
-.required {
-  color: var(--color-danger);
-}
-
-.form-input {
-  width: 100%;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  font-size: 0.9375rem;
-  color: var(--color-text);
-  background-color: var(--color-surface);
-}
-
-.form-input:focus {
-  outline: none;
-  border-color: var(--color-accent);
-}
-
-.form-error {
-  font-size: 0.875rem;
-  color: var(--color-danger);
-  margin-bottom: 0.75rem;
-}
-
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.5rem 1.25rem;
-  border-radius: var(--radius);
-  font-size: 0.9375rem;
-  font-weight: 500;
-  border: 1px solid transparent;
-  transition: opacity 0.15s;
-}
-
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn--primary {
-  background-color: var(--color-accent);
-  color: #ffffff;
-}
-
-.btn--primary:hover:not(:disabled) {
-  opacity: 0.9;
-}
-
-.table-wrap {
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  overflow: hidden;
-}
-
-.table-wrap.loading {
-  opacity: 0.5;
-}
-
-.loading-text {
-  padding: 1.5rem;
-  color: var(--color-text-muted);
-  font-size: 0.9375rem;
-}
-
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.data-table th {
-  background-color: var(--color-primary);
-  color: #ffffff;
-  text-align: left;
-  padding: 0.75rem 1rem;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.data-table td {
-  padding: 0.75rem 1rem;
-  font-size: 0.9375rem;
-  border-bottom: 1px solid var(--color-border);
-  color: var(--color-text);
-}
-
-.data-table tbody tr:nth-child(even) td {
-  background-color: #f8fafc;
-}
-
-.data-table tbody tr:last-child td {
-  border-bottom: none;
-}
-
-.empty-cell {
-  color: var(--color-text-muted);
-  text-align: center;
-}
-</style>

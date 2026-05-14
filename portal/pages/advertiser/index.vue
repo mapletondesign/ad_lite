@@ -3,26 +3,10 @@ definePageMeta({ middleware: 'role' })
 </script>
 
 <template>
-  <div class="page">
-    <h1 class="page__title">Advertiser Portal</h1>
-    <p class="coming-soon">Coming soon.</p>
+  <div>
+    <h1 class="h4 fw-bold mb-4">Advertiser Dashboard</h1>
+    <div class="card">
+      <div class="card-body text-muted">Coming soon — creative upload and campaign reporting.</div>
+    </div>
   </div>
 </template>
-
-<style scoped>
-.page {
-  max-width: 700px;
-}
-
-.page__title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--color-text);
-  margin-bottom: 0.75rem;
-}
-
-.coming-soon {
-  font-size: 1rem;
-  color: var(--color-text-muted);
-}
-</style>
