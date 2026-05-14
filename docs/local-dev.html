@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AdLite — Local Dev Startup</title>
+  <link rel="stylesheet" href="local-dev.css" />
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <div class="brand-name">AdLite</div>
+    <div class="brand-sub">Local dev startup guide — run these commands before logging in</div>
+  </div>
+</header>
+
+<main>
+
+  <!-- Badges legend -->
+  <div>
+    <span class="badge badge--once">One-time setup</span> — only run once, ever.
+    &nbsp;
+    <span class="badge badge--every">Every time</span> — run each dev session.
+  </div>
+
+  <!-- Step 1 -->
+  <div>
+    <div class="section-title">Step 1 <span class="badge badge--once">One-time setup</span></div>
+    <div class="step-card">
+      <div class="step-card-header">
+        <div class="step-num">1</div>
+        <div class="step-label">Generate JWT keypair and add to .env</div>
+      </div>
+      <div class="step-card-body">
+        <div class="step-desc">
+          Generates an RSA keypair and appends the base64-encoded values to <code>server/.env</code>.
+          Only do this once — regenerating will invalidate any existing tokens.
+        </div>
+        <div class="cmd-wrap">
+          <div class="cmd-label">Run in: <code>server/</code></div>
+          <pre>cd /Users/hephaestus/Projects/ad_lite/server
+
+openssl genrsa -out /tmp/adlite.pem 2048
+openssl rsa -in /tmp/adlite.pem -pubout -out /tmp/adlite.pub
+
+echo "JWT_PRIVATE_KEY_B64=$(base64 -i /tmp/adlite.pem)" >> .env
+echo "JWT_PUBLIC_KEY_B64=$(base64 -i /tmp/adlite.pub)" >> .env
+echo "PORTAL_ORIGIN=http://localhost:3000" >> .env
+
+rm /tmp/adlite.pem /tmp/adlite.pub</pre>
+        </div>
+        <div class="warning">
+          <strong>Check first:</strong> run <code>grep JWT_PRIVATE_KEY_B64 .env</code> — if it already has a value, skip this step.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 2 -->
+  <div>
+    <div class="section-title">Step 2 <span class="badge badge--every">Every time</span></div>
+    <div class="step-card">
+      <div class="step-card-header">
+        <div class="step-num">2</div>
+        <div class="step-label">Start Postgres and Redis</div>
+        <div class="step-note">Terminal 1</div>
+      </div>
+      <div class="step-card-body">
+        <div class="step-desc">
+          Starts the database and cache in the background. Safe to run if they're already up.
+        </div>
+        <div class="cmd-wrap">
+          <div class="cmd-label">Run in: <code>server/</code></div>
+          <pre>cd /Users/hephaestus/Projects/ad_lite/server
+docker compose up -d</pre>
+        </div>
+        <div class="warning">
+          <strong>First time only (or after a reset):</strong> if you wiped the Docker volume, the migrations run automatically on first boot.
+          Wait ~5 seconds for Postgres to be ready before running the seed.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 3 -->
+  <div>
+    <div class="section-title">Step 3 <span class="badge badge--every">Every time</span></div>
+    <div class="step-card">
+      <div class="step-card-header">
+        <div class="step-num">3</div>
+        <div class="step-label">Seed the database</div>
+        <div class="step-note">Terminal 1 (same window)</div>
+      </div>
+      <div class="step-card-body">
+        <div class="step-desc">
+          Creates the admin user and demo data. Safe to re-run — it checks before inserting and skips existing records.
+        </div>
+        <div class="cmd-wrap">
+          <div class="cmd-label">Run in: <code>server/</code></div>
+          <pre>cd /Users/hephaestus/Projects/ad_lite/server
+go run ./cmd/seed/main.go -demo</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 4 -->
+  <div>
+    <div class="section-title">Step 4 <span class="badge badge--every">Every time</span></div>
+    <div class="step-card">
+      <div class="step-card-header">
+        <div class="step-num">4</div>
+        <div class="step-label">Start the Go API server</div>
+        <div class="step-note">Terminal 2</div>
+      </div>
+      <div class="step-card-body">
+        <div class="step-desc">
+          Starts the API on <strong>:8080</strong>. Keep this terminal open — it shows request logs.
+          If port 8080 is already in use, kill the old process first.
+        </div>
+        <div class="cmd-wrap">
+          <div class="cmd-label">Run in: <code>server/</code></div>
+          <pre>cd /Users/hephaestus/Projects/ad_lite/server
+go run ./cmd/api/main.go</pre>
+        </div>
+        <div class="cmd-wrap">
+          <div class="cmd-label">If port 8080 is already in use:</div>
+          <pre>lsof -ti :8080 | xargs kill -9</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 5 -->
+  <div>
+    <div class="section-title">Step 5 <span class="badge badge--every">Every time</span></div>
+    <div class="step-card">
+      <div class="step-card-header">
+        <div class="step-num">5</div>
+        <div class="step-label">Start the Nuxt portal</div>
+        <div class="step-note">Terminal 3</div>
+      </div>
+      <div class="step-card-body">
+        <div class="step-desc">
+          Starts the frontend on <strong>:3000</strong>. First run will take ~15 seconds to compile.
+        </div>
+        <div class="cmd-wrap">
+          <div class="cmd-label">First time only — install dependencies:</div>
+          <pre>cd /Users/hephaestus/Projects/ad_lite/portal
+npm install</pre>
+        </div>
+        <div class="cmd-wrap">
+          <div class="cmd-label">Every time — start dev server:</div>
+          <pre>cd /Users/hephaestus/Projects/ad_lite/portal
+npm run dev</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Login -->
+  <div>
+    <div class="section-title">Login</div>
+    <div class="creds-card">
+      <div class="creds-header">Admin credentials (seeded defaults)</div>
+      <dl>
+        <div class="creds-row">
+          <dt class="creds-key">Email</dt>
+          <dd class="creds-val">admin@adlite.com</dd>
+        </div>
+        <div class="creds-row">
+          <dt class="creds-key">Password</dt>
+          <dd class="creds-val">changeme</dd>
+        </div>
+      </dl>
+    </div>
+  </div>
+
+  <!-- URLs -->
+  <div>
+    <div class="section-title">Local URLs</div>
+    <div class="urls-card">
+      <div class="urls-header">Services</div>
+      <div class="url-row">
+        <div class="url-label">Portal (Nuxt)</div>
+        <a href="http://localhost:3000" target="_blank">http://localhost:3000</a>
+      </div>
+      <div class="url-row">
+        <div class="url-label">API server</div>
+        <a href="http://localhost:8080" target="_blank">http://localhost:8080</a>
+      </div>
+      <div class="url-row">
+        <div class="url-label">Health check</div>
+        <a href="http://localhost:8080/health" target="_blank">http://localhost:8080/health</a>
+      </div>
+      <div class="url-row">
+        <div class="url-label">Postgres</div>
+        <span class="creds-val">localhost:5432 &nbsp;·&nbsp; db: adlite &nbsp;·&nbsp; user: adlite &nbsp;·&nbsp; pass: adlite</span>
+      </div>
+      <div class="url-row">
+        <div class="url-label">Redis</div>
+        <span class="creds-val">localhost:6379</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reset -->
+  <div>
+    <div class="section-title">Nuclear reset — wipe all data and start fresh</div>
+    <div class="step-card">
+      <div class="step-card-body">
+        <div class="step-desc">
+          Destroys the Postgres and Redis volumes. All data is lost. Migrations re-run automatically on next <code>docker compose up</code>.
+        </div>
+        <div class="cmd-wrap">
+          <pre>cd /Users/hephaestus/Projects/ad_lite/server
+docker compose down -v
+docker compose up -d</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer class="site-footer">AdLite local dev reference</footer>
+
+</body>
+</html>
