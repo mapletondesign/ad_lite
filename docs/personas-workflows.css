@@ -1,0 +1,303 @@
+:root {
+  --bg: #f1f5f9;
+  --surface: #ffffff;
+  --border: #e2e8f0;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --radius: 10px;
+
+  --color-admin:      #dc2626;
+  --color-admin-bg:   #fee2e2;
+  --color-venue:      #16a34a;
+  --color-venue-bg:   #dcfce7;
+  --color-adv:        #7c3aed;
+  --color-adv-bg:     #f3e8ff;
+  --color-device:     #b45309;
+  --color-device-bg:  #fef3c7;
+  --color-server:     #0369a1;
+  --color-server-bg:  #e0f2fe;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+/* ── Header ── */
+.site-header {
+  background: var(--text);
+  color: #fff;
+  padding: 2rem 0;
+}
+
+.header-inner {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.brand-name {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: #fff;
+}
+
+.brand-sub {
+  margin-top: 0.25rem;
+  font-size: 0.9rem;
+  color: #94a3b8;
+}
+
+/* ── Layout ── */
+main {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 2.5rem 2rem 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+.section { display: flex; flex-direction: column; gap: 1.25rem; }
+
+.section-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  border-left: 4px solid var(--color-server);
+  padding-left: 0.75rem;
+  color: var(--text);
+}
+
+/* ── Persona grid ── */
+.persona-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.persona-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.persona-header {
+  padding: 1rem 1.1rem 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.persona-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.persona-icon--admin  { background: var(--color-admin-bg);  }
+.persona-icon--venue  { background: var(--color-venue-bg);  }
+.persona-icon--adv    { background: var(--color-adv-bg);    }
+.persona-icon--device { background: var(--color-device-bg); }
+
+.persona-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+
+.persona-role {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.persona-body {
+  padding: 0 1.1rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.persona-section-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
+  margin-bottom: 0.25rem;
+}
+
+.persona-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.persona-list li {
+  font-size: 0.83rem;
+  color: var(--text-muted);
+  padding-left: 0.9rem;
+  position: relative;
+}
+
+.persona-list li::before {
+  content: "–";
+  position: absolute;
+  left: 0;
+  color: var(--border);
+}
+
+.persona-tag {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.15rem 0.55rem;
+  border-radius: 99px;
+  margin-top: 0.1rem;
+}
+
+.persona-tag--admin  { background: var(--color-admin-bg);  color: var(--color-admin);  }
+.persona-tag--venue  { background: var(--color-venue-bg);  color: var(--color-venue);  }
+.persona-tag--adv    { background: var(--color-adv-bg);    color: var(--color-adv);    }
+.persona-tag--device { background: var(--color-device-bg); color: var(--color-device); }
+
+.divider { border: none; border-top: 1px solid var(--border); }
+
+/* ── Workflow ── */
+.workflow {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.workflow-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.9rem 1.25rem;
+  background: var(--text);
+  color: #fff;
+}
+
+.workflow-num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--text);
+  font-weight: 800;
+  font-size: 0.82rem;
+  flex-shrink: 0;
+}
+
+.workflow-title {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.workflow-desc {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin-left: auto;
+}
+
+.workflow-steps {
+  list-style: none;
+  counter-reset: wstep;
+}
+
+.wstep {
+  display: flex;
+  gap: 1rem;
+  padding: 0.9rem 1.25rem;
+  border-top: 1px solid var(--border);
+  counter-increment: wstep;
+  align-items: flex-start;
+}
+
+.wstep-num {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  opacity: 0.4;
+  min-width: 1.2rem;
+  padding-top: 0.15rem;
+}
+
+.wstep-num::before { content: counter(wstep); }
+
+.wstep-content { display: flex; flex-direction: column; gap: 0.2rem; flex: 1; }
+
+.wstep-actors {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.actor {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.15rem 0.55rem;
+  border-radius: 99px;
+  white-space: nowrap;
+}
+
+.actor--admin  { background: var(--color-admin-bg);  color: var(--color-admin);  }
+.actor--venue  { background: var(--color-venue-bg);  color: var(--color-venue);  }
+.actor--adv    { background: var(--color-adv-bg);    color: var(--color-adv);    }
+.actor--device { background: var(--color-device-bg); color: var(--color-device); }
+.actor--server { background: var(--color-server-bg); color: var(--color-server); }
+
+.actor-arrow { font-size: 0.8rem; color: var(--text-muted); }
+
+.wstep-desc {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.wstep-desc code {
+  background: #f1f5f9;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.05rem 0.35rem;
+  font-size: 0.78rem;
+  color: var(--text);
+  font-family: "SF Mono", ui-monospace, monospace;
+}
+
+.wstep-note {
+  font-size: 0.78rem;
+  color: var(--color-device);
+  font-style: italic;
+}
+
+/* ── Footer ── */
+.site-footer {
+  text-align: center;
+  padding: 2rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+}
+
+@media (max-width: 600px) {
+  .persona-grid { grid-template-columns: 1fr; }
+}
