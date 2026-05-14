@@ -13,6 +13,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/mapletondesign/ad_lite/api/middleware"
 	"github.com/mapletondesign/ad_lite/internal/advertisers"
+	"github.com/mapletondesign/ad_lite/internal/assets"
 	"github.com/mapletondesign/ad_lite/internal/auth"
 	"github.com/mapletondesign/ad_lite/internal/bookings"
 	"github.com/mapletondesign/ad_lite/internal/devices"
@@ -22,14 +23,13 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-func NewRouter(db *pgxpool.Pool, rdb *redis.Client, privateKey *rsa.PrivateKey, publicKey *rsa.PublicKey) http.Handler {
+func NewRouter(db *pgxpool.Pool, rdb *redis.Client, privateKey *rsa.PrivateKey, publicKey *rsa.PublicKey, assetsSvc *assets.Service) http.Handler {
 	r := chi.NewRouter()
 
 	r.Use(chimw.Recoverer)
 	r.Use(chimw.RequestID)
 	r.Use(middleware.Logger)
 	r.Use(middleware.SecurityHeaders)
-	r.Use(middleware.MaxBodySize(1 << 20)) // 1 MB
 
 	authSvc := auth.NewService(db, privateKey, publicKey)
 	authHandler := auth.NewHandler(authSvc)
@@ -53,61 +53,73 @@ func NewRouter(db *pgxpool.Pool, rdb *redis.Client, privateKey *rsa.PrivateKey, 
 	r.Get("/health", healthHandler(db, rdb))
 
 	r.Route("/api/v1", func(r chi.Router) {
-		// Auth — open
-		r.Post("/auth/register", authHandler.Register)
-		r.Post("/auth/login", authHandler.Login)
-		r.Post("/auth/refresh", authHandler.Refresh)
-
-		// Management routes — require admin JWT
-		r.Group(func(r chi.Router) {
-			r.Use(middleware.UserAuth(publicKey, "admin"))
-
-			r.Route("/venues", func(r chi.Router) {
-				r.Post("/", venueHandler.Create)
-				r.Get("/", venueHandler.List)
-			})
-
-			r.Route("/advertisers", func(r chi.Router) {
-				r.Post("/", advertiserHandler.Create)
-				r.Get("/", advertiserHandler.List)
-			})
-
-			r.Route("/slots", func(r chi.Router) {
-				r.Get("/", slotHandler.List)
-				r.Post("/", slotHandler.Create)
-				r.Patch("/{id}", slotHandler.Update)
-			})
-
-			r.Route("/bookings", func(r chi.Router) {
-				r.Post("/", bookingHandler.Create)
-				r.Get("/", bookingHandler.List)
-			})
-
-			r.Route("/analytics", func(r chi.Router) {
-				r.Get("/impressions", stubHandler("impression reporting — coming in Stage 4"))
-			})
-		})
-
-		// Device registration — open (device obtains its token here)
-		r.Post("/devices/register", deviceHandler.Register)
-
-		// Device routes — require device JWT
-		r.Group(func(r chi.Router) {
-			r.Use(middleware.DeviceAuth(publicKey))
-
-			r.Get("/devices", deviceHandler.List)
-
-			// Heartbeat and impression are rate-limited: 30 req/min per device
+		// Asset upload — 100 MB body limit, advertiser or admin JWT
+		if assetsSvc != nil {
+			assetsHandler := assets.NewHandler(assetsSvc)
 			r.Group(func(r chi.Router) {
-				r.Use(middleware.DeviceRateLimit(rdb, 30, time.Minute))
-				r.Post("/devices/{id}/heartbeat", deviceHandler.Heartbeat)
-				r.Post("/devices/{id}/impression", deviceHandler.Impression)
+				r.Use(middleware.MaxBodySize(100 << 20))
+				r.Use(middleware.UserAuth(publicKey, "admin", "advertiser"))
+				r.Post("/assets/upload", assetsHandler.Upload)
+			})
+		}
+
+		// All other API routes — 1 MB body limit
+		r.Group(func(r chi.Router) {
+			r.Use(middleware.MaxBodySize(1 << 20))
+
+			// Auth — open
+			r.Post("/auth/register", authHandler.Register)
+			r.Post("/auth/login", authHandler.Login)
+			r.Post("/auth/refresh", authHandler.Refresh)
+
+			// Management routes — require admin JWT
+			r.Group(func(r chi.Router) {
+				r.Use(middleware.UserAuth(publicKey, "admin"))
+
+				r.Route("/venues", func(r chi.Router) {
+					r.Post("/", venueHandler.Create)
+					r.Get("/", venueHandler.List)
+				})
+
+				r.Route("/advertisers", func(r chi.Router) {
+					r.Post("/", advertiserHandler.Create)
+					r.Get("/", advertiserHandler.List)
+				})
+
+				r.Route("/slots", func(r chi.Router) {
+					r.Get("/", slotHandler.List)
+					r.Post("/", slotHandler.Create)
+					r.Patch("/{id}", slotHandler.Update)
+				})
+
+				r.Route("/bookings", func(r chi.Router) {
+					r.Post("/", bookingHandler.Create)
+					r.Get("/", bookingHandler.List)
+				})
+
+				r.Route("/analytics", func(r chi.Router) {
+					r.Get("/impressions", stubHandler("impression reporting — coming in Stage 4"))
+				})
+			})
+
+			// Device registration — open (device obtains its token here)
+			r.Post("/devices/register", deviceHandler.Register)
+
+			// Device routes — require device JWT
+			r.Group(func(r chi.Router) {
+				r.Use(middleware.DeviceAuth(publicKey))
+
+				r.Get("/devices", deviceHandler.List)
+
+				// Heartbeat and impression are rate-limited: 30 req/min per device
+				r.Group(func(r chi.Router) {
+					r.Use(middleware.DeviceRateLimit(rdb, 30, time.Minute))
+					r.Post("/devices/{id}/heartbeat", deviceHandler.Heartbeat)
+					r.Post("/devices/{id}/impression", deviceHandler.Impression)
+				})
 			})
 		})
 	})
-
-	assetsDir := envOr("ASSETS_DIR", "./assets")
-	r.Handle("/assets/*", http.StripPrefix("/assets/", http.FileServer(http.Dir(assetsDir))))
 
 	clientDir := envOr("CLIENT_DIR", "../client")
 	r.Handle("/*", http.FileServer(http.Dir(clientDir)))

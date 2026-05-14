@@ -12,6 +12,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/mapletondesign/ad_lite/api"
+	"github.com/mapletondesign/ad_lite/internal/assets"
 	"github.com/mapletondesign/ad_lite/internal/auth"
 	"github.com/mapletondesign/ad_lite/internal/db"
 )
@@ -39,6 +40,12 @@ func main() {
 	rdb := db.ConnectRedis(os.Getenv("REDIS_URL"))
 	defer rdb.Close()
 
+	assetsSvc, err := assets.NewService(context.Background())
+	if err != nil {
+		log.Printf("asset upload disabled: %v", err)
+		assetsSvc = nil
+	}
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
@@ -46,7 +53,7 @@ func main() {
 
 	srv := &http.Server{
 		Addr:         fmt.Sprintf(":%s", port),
-		Handler:      api.NewRouter(pool, rdb, privateKey, publicKey),
+		Handler:      api.NewRouter(pool, rdb, privateKey, publicKey, assetsSvc),
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
 		IdleTimeout:  120 * time.Second,
