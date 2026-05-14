@@ -345,6 +345,28 @@ main {
   color: var(--text-muted);
 }
 
+/* ── Infrastructure ── */
+.infra-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.infra-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.infra-card-header {
+  padding: 0.75rem 1.1rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #ffffff;
+  background: var(--color-data);
+}
+
 /* ── Auth Model ── */
 .auth-grid {
   display: grid;

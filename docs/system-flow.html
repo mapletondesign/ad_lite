@@ -174,10 +174,12 @@
             <span class="step-arrow">→</span>
             <span class="actor actor--server">API Server</span>
             <span class="step-arrow">→</span>
-            <span class="actor actor--db">DB</span>
+            <span class="actor actor--data">S3 / R2</span>
+            <span class="step-arrow">→</span>
+            <span class="actor actor--advertiser">Advertiser</span>
           </div>
           <div class="step-desc">
-            <code>POST /api/v1/bookings</code> — atomic transaction: availability check → booking insert → slot status set to <code>booked</code>; no double-booking possible
+            <code>POST /api/v1/assets/upload</code> (multipart, 100 MB max, advertiser JWT) — stores creative in Cloudflare R2 at <code>creatives/{uuid}.{ext}</code>; returns <code>{"url": "https://assets.adlite.com/..."}</code>
           </div>
         </li>
         <li class="step">
@@ -186,10 +188,10 @@
             <span class="step-arrow">→</span>
             <span class="actor actor--server">API Server</span>
             <span class="step-arrow">→</span>
-            <span class="actor actor--data">S3 / R2</span>
+            <span class="actor actor--db">DB</span>
           </div>
           <div class="step-desc">
-            Creative (image or video) uploaded via API, stored in Cloudflare R2; CDN URL written back to the booking record
+            <code>POST /api/v1/bookings</code> with the CDN URL from step 2 — atomic transaction: availability check → booking insert → slot status set to <code>booked</code>; no double-booking possible
           </div>
         </li>
       </ol>
@@ -246,7 +248,7 @@
             <span class="actor actor--db">DB</span>
           </div>
           <div class="step-desc">
-            <code>POST /api/v1/devices/:id/impression</code> — fire-and-forget; records <code>{booking_id, device_id, played_at}</code> for billing and analytics
+            <code>POST /api/v1/devices/:id/impression</code> — fire-and-forget; records <code>{booking_id, device_id, played_at}</code> for billing and analytics; rate-limited (30 req/min/device, shared with heartbeat)
           </div>
         </li>
       </ol>
@@ -296,6 +298,47 @@
       </div>
     </div>
 
+  </section>
+
+  <!-- ── Infrastructure ── -->
+  <section class="section">
+    <h2 class="section-title">Infrastructure Details</h2>
+    <div class="infra-grid">
+
+      <div class="infra-card">
+        <div class="infra-card-header">Rate Limiting</div>
+        <dl class="auth-detail-list">
+          <div class="auth-row"><dt>Endpoints</dt><dd><code>/heartbeat</code> and <code>/impression</code></dd></div>
+          <div class="auth-row"><dt>Limit</dt><dd>30 requests / minute / device</dd></div>
+          <div class="auth-row"><dt>Algorithm</dt><dd>Fixed-window counter (Redis INCR + EXPIRE)</dd></div>
+          <div class="auth-row"><dt>Key</dt><dd><code>rl:device:{device_id}</code></dd></div>
+          <div class="auth-row"><dt>On Redis failure</dt><dd>Fails open — request allowed through</dd></div>
+        </dl>
+      </div>
+
+      <div class="infra-card">
+        <div class="infra-card-header">Playlist Cache</div>
+        <dl class="auth-detail-list">
+          <div class="auth-row"><dt>Key</dt><dd><code>playlist:{device_id}</code></dd></div>
+          <div class="auth-row"><dt>TTL</dt><dd>60 seconds</dd></div>
+          <div class="auth-row"><dt>Populated by</dt><dd>Scheduler on heartbeat cache miss</dd></div>
+          <div class="auth-row"><dt>Invalidation</dt><dd>Natural expiry (TTL) — no active purge</dd></div>
+          <div class="auth-row"><dt>On Redis failure</dt><dd>Falls through to Postgres transparently</dd></div>
+        </dl>
+      </div>
+
+      <div class="infra-card">
+        <div class="infra-card-header">Asset Storage</div>
+        <dl class="auth-detail-list">
+          <div class="auth-row"><dt>Provider</dt><dd>Cloudflare R2 (S3-compatible)</dd></div>
+          <div class="auth-row"><dt>Key format</dt><dd><code>creatives/{uuid}.{ext}</code></dd></div>
+          <div class="auth-row"><dt>Allowed types</dt><dd>JPEG, PNG, GIF, WebP, MP4, WebM, MOV</dd></div>
+          <div class="auth-row"><dt>Max size</dt><dd>100 MB per upload</dd></div>
+          <div class="auth-row"><dt>Served via</dt><dd>CDN (custom domain on R2 bucket)</dd></div>
+        </dl>
+      </div>
+
+    </div>
   </section>
 
   <!-- ── Auth Model ── -->
