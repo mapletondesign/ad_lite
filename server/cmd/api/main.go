@@ -1,0 +1,80 @@
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"github.com/joho/godotenv"
+	"github.com/mapletondesign/ad_lite/api"
+	"github.com/mapletondesign/ad_lite/internal/assets"
+	"github.com/mapletondesign/ad_lite/internal/auth"
+	"github.com/mapletondesign/ad_lite/internal/db"
+)
+
+func main() {
+	if err := godotenv.Load(); err != nil {
+		log.Println("no .env file found, reading environment directly")
+	}
+
+	privateKey, err := auth.LoadPrivateKey()
+	if err != nil {
+		log.Fatalf("load private key: %v", err)
+	}
+	publicKey, err := auth.LoadPublicKey()
+	if err != nil {
+		log.Fatalf("load public key: %v", err)
+	}
+
+	pool, err := db.Connect(os.Getenv("DATABASE_URL"))
+	if err != nil {
+		log.Fatalf("db connect: %v", err)
+	}
+	defer pool.Close()
+
+	rdb := db.ConnectRedis(os.Getenv("REDIS_URL"))
+	defer rdb.Close()
+
+	assetsSvc, err := assets.NewService(context.Background())
+	if err != nil {
+		log.Printf("asset upload disabled: %v", err)
+		assetsSvc = nil
+	}
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	srv := &http.Server{
+		Addr:         fmt.Sprintf(":%s", port),
+		Handler:      api.NewRouter(pool, rdb, privateKey, publicKey, assetsSvc),
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 30 * time.Second,
+		IdleTimeout:  120 * time.Second,
+	}
+
+	go func() {
+		log.Printf("server listening on :%s", port)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("listen: %v", err)
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	log.Println("shutting down...")
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatalf("shutdown: %v", err)
+	}
+	log.Println("stopped")
+}

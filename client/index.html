@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AdLite Player</title>
+  <link rel="stylesheet" href="/css/player.css">
+</head>
+<body>
+
+  <!-- Kiosk player -->
+  <div id="player" class="hidden">
+    <img    id="ad-image" alt="">
+    <video  id="ad-video" muted playsinline></video>
+    <div id="status-dot" title=""></div>
+  </div>
+
+  <!-- Setup screen shown when no device_id is configured -->
+  <div id="setup">
+    <div class="setup-card">
+      <h1>AdLite Player</h1>
+      <p>Enter the Device ID to begin displaying ads.</p>
+      <input id="device-id-input" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autocomplete="off">
+      <button id="setup-btn">Start Player</button>
+      <p class="hint">The Device ID is returned when you register a device via<br><code>POST /api/v1/devices/register</code></p>
+    </div>
+  </div>
+
+  <script src="/js/player.js?v=2"></script>
+</body>
+</html>
