@@ -1,0 +1,12 @@
+# Environment — never commit secrets
+.env
+
+# Build output
+bin/
+
+# Go test cache
+*.test
+*.out
+
+# macOS
+.DS_Store

@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	chimw "github.com/go-chi/chi/v5/middleware"
+	"github.com/mapletondesign/ad_lite/api/middleware"
 )
 
 type Handler struct {
@@ -71,6 +72,24 @@ func (h *Handler) Impression(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusCreated, map[string]string{"status": "recorded"})
+}
+
+func (h *Handler) ListForVenue(w http.ResponseWriter, r *http.Request) {
+	venueID, _ := r.Context().Value(middleware.VenueIDKey).(string)
+	if venueID == "" {
+		writeError(w, http.StatusForbidden, "venue account not linked to this user")
+		return
+	}
+	devices, err := h.svc.ListByVenue(r.Context(), venueID)
+	if err != nil {
+		log.Printf("[%s] list venue devices: %v", chimw.GetReqID(r.Context()), err)
+		writeError(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
+	if devices == nil {
+		devices = []Device{}
+	}
+	writeJSON(w, http.StatusOK, devices)
 }
 
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {

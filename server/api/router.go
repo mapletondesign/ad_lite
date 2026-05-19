@@ -68,10 +68,13 @@ func NewRouter(db *pgxpool.Pool, rdb *redis.Client, privateKey *rsa.PrivateKey, 
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.MaxBodySize(1 << 20))
 
-			// Auth — open
-			r.Post("/auth/register", authHandler.Register)
-			r.Post("/auth/login", authHandler.Login)
-			r.Post("/auth/refresh", authHandler.Refresh)
+			// Auth — open, but rate-limited: 10 req/min per IP
+			r.Group(func(r chi.Router) {
+				r.Use(middleware.IPRateLimit(rdb, "auth", 10, time.Minute))
+				r.Post("/auth/register", authHandler.Register)
+				r.Post("/auth/login", authHandler.Login)
+				r.Post("/auth/refresh", authHandler.Refresh)
+			})
 
 			// Management routes — require admin JWT
 			r.Group(func(r chi.Router) {
@@ -101,6 +104,18 @@ func NewRouter(db *pgxpool.Pool, rdb *redis.Client, privateKey *rsa.PrivateKey, 
 				r.Route("/analytics", func(r chi.Router) {
 					r.Get("/impressions", stubHandler("impression reporting — coming in Stage 4"))
 				})
+			})
+
+			// Advertiser-scoped routes
+			r.Group(func(r chi.Router) {
+				r.Use(middleware.UserAuth(publicKey, "advertiser"))
+				r.Get("/advertiser/bookings", bookingHandler.ListForAdvertiser)
+			})
+
+			// Venue-scoped routes
+			r.Group(func(r chi.Router) {
+				r.Use(middleware.UserAuth(publicKey, "venue"))
+				r.Get("/venue/devices", deviceHandler.ListForVenue)
 			})
 
 			// Device registration — open (device obtains its token here)

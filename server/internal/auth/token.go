@@ -8,7 +8,10 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-const AccessTokenDuration = 15 * time.Minute
+const (
+	AccessTokenDuration = 15 * time.Minute
+	DeviceTokenDuration = 365 * 24 * time.Hour
+)
 
 type Claims struct {
 	jwt.RegisteredClaims
@@ -18,10 +21,12 @@ type Claims struct {
 }
 
 func IssueDeviceToken(privateKey *rsa.PrivateKey, deviceID string) (string, error) {
+	now := time.Now()
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
-			Subject:  deviceID,
-			IssuedAt: jwt.NewNumericDate(time.Now()),
+			Subject:   deviceID,
+			IssuedAt:  jwt.NewNumericDate(now),
+			ExpiresAt: jwt.NewNumericDate(now.Add(DeviceTokenDuration)),
 		},
 		Role: "device",
 	})

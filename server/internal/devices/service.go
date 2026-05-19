@@ -81,6 +81,29 @@ func (s *Service) RecordImpression(ctx context.Context, deviceID string, req Imp
 	return nil
 }
 
+func (s *Service) ListByVenue(ctx context.Context, venueID string) ([]Device, error) {
+	rows, err := s.db.Query(ctx, `
+		SELECT id, venue_id, name, status, last_seen, ip_address, firmware_version, created_at
+		FROM devices WHERE venue_id = $1 ORDER BY created_at DESC`, venueID)
+	if err != nil {
+		return nil, fmt.Errorf("query devices by venue: %w", err)
+	}
+	defer rows.Close()
+
+	var devices []Device
+	for rows.Next() {
+		var d Device
+		if err := rows.Scan(
+			&d.ID, &d.VenueID, &d.Name, &d.Status,
+			&d.LastSeen, &d.IPAddress, &d.FirmwareVersion, &d.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		devices = append(devices, d)
+	}
+	return devices, rows.Err()
+}
+
 func (s *Service) List(ctx context.Context) ([]Device, error) {
 	rows, err := s.db.Query(ctx, `
 		SELECT id, venue_id, name, status, last_seen, ip_address, firmware_version, created_at

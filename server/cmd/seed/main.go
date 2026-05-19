@@ -15,9 +15,13 @@ import (
 
 func main() {
 	email := flag.String("email", "admin@adlite.com", "admin user email")
-	password := flag.String("password", "changeme", "admin user password")
+	password := flag.String("password", "", "admin user password (required)")
 	demo := flag.Bool("demo", false, "also seed demo venues, advertisers, devices, slots, and bookings")
 	flag.Parse()
+
+	if *password == "" {
+		log.Fatal("--password is required; refusing to create admin with no password")
+	}
 
 	if err := godotenv.Load(); err != nil {
 		log.Println("no .env file, reading environment directly")

@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	chimw "github.com/go-chi/chi/v5/middleware"
+	"github.com/mapletondesign/ad_lite/api/middleware"
 )
 
 type Handler struct {
@@ -50,6 +51,28 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	bookings, err := h.svc.List(r.Context(), f)
 	if err != nil {
 		log.Printf("[%s] list bookings: %v", chimw.GetReqID(r.Context()), err)
+		writeError(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
+	if bookings == nil {
+		bookings = []Booking{}
+	}
+	writeJSON(w, http.StatusOK, bookings)
+}
+
+func (h *Handler) ListForAdvertiser(w http.ResponseWriter, r *http.Request) {
+	advertiserID, _ := r.Context().Value(middleware.AdvertiserIDKey).(string)
+	if advertiserID == "" {
+		writeError(w, http.StatusForbidden, "advertiser account not linked to this user")
+		return
+	}
+	f := ListFilter{
+		AdvertiserID: advertiserID,
+		Status:       r.URL.Query().Get("status"),
+	}
+	bookings, err := h.svc.List(r.Context(), f)
+	if err != nil {
+		log.Printf("[%s] list advertiser bookings: %v", chimw.GetReqID(r.Context()), err)
 		writeError(w, http.StatusInternalServerError, "internal server error")
 		return
 	}

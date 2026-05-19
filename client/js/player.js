@@ -3,6 +3,7 @@
 // ── Config ────────────────────────────────────────────────────────────────────
 
 const STORAGE_KEY        = 'adlite_device_id';
+const TOKEN_KEY          = 'adlite_device_token';
 const HEARTBEAT_INTERVAL = 60 * 1000;  // keep server status updated
 const RETRY_DELAY        = 10 * 1000;  // wait before retrying on error
 const NO_ADS_DELAY       = 30 * 1000;  // poll interval when playlist is empty
@@ -19,8 +20,13 @@ const $btn     = document.getElementById('setup-btn');
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
-let deviceId = new URLSearchParams(location.search).get('device_id')
-             || localStorage.getItem(STORAGE_KEY);
+const _params = new URLSearchParams(location.search);
+
+let deviceId = _params.get('device_id') || localStorage.getItem(STORAGE_KEY);
+let deviceToken = _params.get('token') || localStorage.getItem(TOKEN_KEY);
+
+if (_params.get('device_id')) localStorage.setItem(STORAGE_KEY, deviceId);
+if (_params.get('token'))     localStorage.setItem(TOKEN_KEY, deviceToken);
 
 // ── Setup screen ──────────────────────────────────────────────────────────────
 
@@ -87,7 +93,7 @@ async function playerLoop() {
 async function heartbeat() {
   const res = await fetch(`/api/v1/devices/${deviceId}/heartbeat`, {
     method:  'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: authHeaders(),
     body:    JSON.stringify({
       ip_address:       '',
       firmware_version: 'web-client-1.0',
@@ -101,12 +107,18 @@ async function heartbeat() {
 function recordImpression(bookingId) {
   fetch(`/api/v1/devices/${deviceId}/impression`, {
     method:  'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: authHeaders(),
     body:    JSON.stringify({
       booking_id: bookingId,
       played_at:  Math.floor(Date.now() / 1000),
     }),
   }).catch(() => {}); // non-blocking — player must never stall on analytics
+}
+
+function authHeaders() {
+  const h = { 'Content-Type': 'application/json' };
+  if (deviceToken) h['Authorization'] = 'Bearer ' + deviceToken;
+  return h;
 }
 
 // ── Playback ──────────────────────────────────────────────────────────────────

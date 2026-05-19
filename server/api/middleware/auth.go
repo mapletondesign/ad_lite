@@ -12,9 +12,11 @@ import (
 type contextKey string
 
 const (
-	DeviceIDKey contextKey = "device_id"
-	UserIDKey   contextKey = "user_id"
-	RoleKey     contextKey = "role"
+	DeviceIDKey     contextKey = "device_id"
+	UserIDKey       contextKey = "user_id"
+	RoleKey         contextKey = "role"
+	AdvertiserIDKey contextKey = "advertiser_id"
+	VenueIDKey      contextKey = "venue_id"
 )
 
 func DeviceAuth(publicKey *rsa.PublicKey) func(http.Handler) http.Handler {
@@ -60,6 +62,8 @@ func UserAuth(publicKey *rsa.PublicKey, roles ...string) func(http.Handler) http
 			ctx := r.Context()
 			ctx = context.WithValue(ctx, UserIDKey, claims.Subject)
 			ctx = context.WithValue(ctx, RoleKey, claims.Role)
+			ctx = context.WithValue(ctx, AdvertiserIDKey, claims.AdvertiserID)
+			ctx = context.WithValue(ctx, VenueIDKey, claims.VenueID)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
