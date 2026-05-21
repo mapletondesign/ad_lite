@@ -43,4 +43,3 @@ coverage/
 
 # Go binaries
 server/seed
-server/api

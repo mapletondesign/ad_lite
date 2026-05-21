@@ -49,3 +49,17 @@
   border-radius: var(--bs-border-radius);
   height: 100px;
 }
+
+/* Creative upload page */
+.creative-upload-card {
+  max-width: 520px;
+}
+
+.creative-preview {
+  max-width: 480px;
+  max-height: 270px;
+}
+
+.creative-preview--image {
+  object-fit: contain;
+}

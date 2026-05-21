@@ -33,9 +33,6 @@ func IPRateLimit(rdb *redis.Client, prefix string, limit int, window time.Durati
 }
 
 func clientIP(r *http.Request) string {
-	if fwd := r.Header.Get("X-Forwarded-For"); fwd != "" {
-		return strings.SplitN(fwd, ",", 2)[0]
-	}
 	if ip, _, ok := strings.Cut(r.RemoteAddr, ":"); ok {
 		return ip
 	}

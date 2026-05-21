@@ -42,7 +42,7 @@ async function handleUpload() {
   <div>
     <h1 class="h4 fw-bold mb-4">Upload Creative</h1>
 
-    <div class="card" style="max-width: 520px;">
+    <div class="card creative-upload-card">
       <div class="card-body">
         <div class="mb-3">
           <label class="form-label" for="creative-file">
@@ -82,15 +82,13 @@ async function handleUpload() {
         v-if="file?.type.startsWith('video/')"
         :src="uploadedUrl"
         controls
-        class="rounded border"
-        style="max-width: 480px; max-height: 270px;"
+        class="rounded border creative-preview"
       />
       <img
         v-else
         :src="uploadedUrl"
         alt="Uploaded creative"
-        class="rounded border"
-        style="max-width: 480px; max-height: 270px; object-fit: contain;"
+        class="rounded border creative-preview creative-preview--image"
       />
     </div>
   </div>
