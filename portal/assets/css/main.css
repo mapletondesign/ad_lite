@@ -1,53 +1,6 @@
-/* Sidebar positioning — Bootstrap doesn't provide a fixed sidebar */
-.sidebar {
-  width: 220px;
-  position: fixed;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  overflow-y: auto;
-  z-index: 100;
-  background-color: #1a1d20;
-}
-
-.main-content {
-  margin-left: 220px;
-  min-height: 100vh;
-}
-
-/* Sidebar nav links */
-.sidebar .nav-link {
-  color: rgba(255, 255, 255, 0.6);
-  border-radius: 0.375rem;
-}
-
-.sidebar .nav-link:hover {
-  color: #fff;
-  background-color: rgba(255, 255, 255, 0.08);
-}
-
-.sidebar .nav-link.active {
-  color: #fff;
-  background-color: rgba(255, 255, 255, 0.12);
-}
-
-/* Auth page card max-width */
-.auth-card {
-  width: 100%;
-  max-width: 400px;
-}
-
-/* Skeleton loading */
-@keyframes skeleton-pulse {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.4; }
-}
-
-.skeleton {
-  animation: skeleton-pulse 1.5s ease-in-out infinite;
-  background-color: var(--bs-secondary-bg);
-  border-radius: var(--bs-border-radius);
-  height: 100px;
+.monospace {
+  font-family: monospace;
+  font-size: 0.8rem;
 }
 
 /* Creative upload page */

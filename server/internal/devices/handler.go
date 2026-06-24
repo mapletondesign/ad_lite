@@ -40,6 +40,10 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) Heartbeat(w http.ResponseWriter, r *http.Request) {
 	deviceID := chi.URLParam(r, "id")
+	if jwtID, _ := r.Context().Value(middleware.DeviceIDKey).(string); jwtID != deviceID {
+		writeError(w, http.StatusForbidden, "forbidden")
+		return
+	}
 	var req HeartbeatRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")
@@ -61,6 +65,10 @@ func (h *Handler) Heartbeat(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) Impression(w http.ResponseWriter, r *http.Request) {
 	deviceID := chi.URLParam(r, "id")
+	if jwtID, _ := r.Context().Value(middleware.DeviceIDKey).(string); jwtID != deviceID {
+		writeError(w, http.StatusForbidden, "forbidden")
+		return
+	}
 	var req ImpressionRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")

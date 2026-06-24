@@ -5,29 +5,46 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	chimw "github.com/go-chi/chi/v5/middleware"
+	"github.com/mapletondesign/ad_lite/api/middleware"
+	"github.com/mapletondesign/ad_lite/internal/audit"
 )
 
 type Handler struct {
-	svc *Service
+	svc      *Service
+	auditSvc *audit.Service
 }
 
-func NewHandler(svc *Service) *Handler {
-	return &Handler{svc: svc}
+func NewHandler(svc *Service, auditSvc *audit.Service) *Handler {
+	return &Handler{svc: svc, auditSvc: auditSvc}
 }
 
 func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
+	actorID, _ := r.Context().Value(middleware.UserIDKey).(string)
+
 	var req CreateRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
-	a, err := h.svc.Create(r.Context(), req)
+	a, err := h.svc.Create(r.Context(), req, actorID)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
+	h.auditSvc.Log(actorID, "create_advertiser", "advertisers", a.ID, map[string]any{"name": a.Name, "email": a.Email})
 	writeJSON(w, http.StatusCreated, a)
+}
+
+func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	a, err := h.svc.Get(r.Context(), id)
+	if err != nil {
+		writeError(w, http.StatusNotFound, "advertiser not found")
+		return
+	}
+	writeJSON(w, http.StatusOK, a)
 }
 
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {

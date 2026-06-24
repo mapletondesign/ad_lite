@@ -16,9 +16,9 @@ dev:
 build:
 	go build -o bin/api ./cmd/api/...
 
-# Run tests
+# Run tests (sequential: all packages share a single ad_lite_test DB)
 test:
-	go test ./...
+	go test -p 1 ./... -count=1 -timeout 120s
 
 # Lint (requires golangci-lint: brew install golangci-lint)
 lint:

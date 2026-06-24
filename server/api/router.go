@@ -13,7 +13,9 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/mapletondesign/ad_lite/api/middleware"
 	"github.com/mapletondesign/ad_lite/internal/advertisers"
+	"github.com/mapletondesign/ad_lite/internal/analytics"
 	"github.com/mapletondesign/ad_lite/internal/assets"
+	"github.com/mapletondesign/ad_lite/internal/audit"
 	"github.com/mapletondesign/ad_lite/internal/auth"
 	"github.com/mapletondesign/ad_lite/internal/bookings"
 	"github.com/mapletondesign/ad_lite/internal/devices"
@@ -35,21 +37,26 @@ func NewRouter(db *pgxpool.Pool, rdb *redis.Client, privateKey *rsa.PrivateKey, 
 	authSvc := auth.NewService(db, privateKey, publicKey)
 	authHandler := auth.NewHandler(authSvc)
 
+	auditSvc := audit.NewService(db)
+
 	venueSvc := venues.NewService(db)
-	venueHandler := venues.NewHandler(venueSvc)
+	venueHandler := venues.NewHandler(venueSvc, auditSvc)
 
 	advertiserSvc := advertisers.NewService(db)
-	advertiserHandler := advertisers.NewHandler(advertiserSvc)
+	advertiserHandler := advertisers.NewHandler(advertiserSvc, auditSvc)
 
 	schedSvc := scheduler.NewService(db, rdb)
 	deviceSvc := devices.NewService(db, schedSvc, privateKey)
 	deviceHandler := devices.NewHandler(deviceSvc)
 
 	slotSvc := slots.NewService(db)
-	slotHandler := slots.NewHandler(slotSvc)
+	slotHandler := slots.NewHandler(slotSvc, auditSvc)
 
-	bookingSvc := bookings.NewService(db)
-	bookingHandler := bookings.NewHandler(bookingSvc)
+	bookingSvc := bookings.NewService(db, envOr("CDN_BASE_URL", ""))
+	bookingHandler := bookings.NewHandler(bookingSvc, auditSvc)
+
+	analyticsSvc := analytics.NewService(db)
+	analyticsHandler := analytics.NewHandler(analyticsSvc)
 
 	r.Get("/health", healthHandler(db, rdb))
 
@@ -83,33 +90,43 @@ func NewRouter(db *pgxpool.Pool, rdb *redis.Client, privateKey *rsa.PrivateKey, 
 				r.Route("/venues", func(r chi.Router) {
 					r.Post("/", venueHandler.Create)
 					r.Get("/", venueHandler.List)
+					r.With(middleware.RequireValidUUID("id")).Get("/{id}", venueHandler.Get)
 				})
 
 				r.Route("/advertisers", func(r chi.Router) {
 					r.Post("/", advertiserHandler.Create)
 					r.Get("/", advertiserHandler.List)
+					r.With(middleware.RequireValidUUID("id")).Get("/{id}", advertiserHandler.Get)
 				})
 
 				r.Route("/slots", func(r chi.Router) {
 					r.Get("/", slotHandler.List)
 					r.Post("/", slotHandler.Create)
-					r.Patch("/{id}", slotHandler.Update)
+					r.With(middleware.RequireValidUUID("id")).Patch("/{id}", slotHandler.Update)
+					r.With(middleware.RequireValidUUID("id")).Delete("/{id}", slotHandler.Delete)
 				})
 
 				r.Route("/bookings", func(r chi.Router) {
 					r.Post("/", bookingHandler.Create)
 					r.Get("/", bookingHandler.List)
+					r.With(middleware.RequireValidUUID("id")).Patch("/{id}", bookingHandler.AdminUpdate)
 				})
 
+				r.Get("/devices", deviceHandler.List)
+
 				r.Route("/analytics", func(r chi.Router) {
-					r.Get("/impressions", stubHandler("impression reporting — coming in Stage 4"))
+					r.Get("/impressions", analyticsHandler.AdminImpressions)
 				})
 			})
 
 			// Advertiser-scoped routes
 			r.Group(func(r chi.Router) {
 				r.Use(middleware.UserAuth(publicKey, "advertiser"))
+				r.Get("/advertiser/slots", slotHandler.List)
 				r.Get("/advertiser/bookings", bookingHandler.ListForAdvertiser)
+				r.Post("/advertiser/bookings", bookingHandler.CreateForAdvertiser)
+				r.With(middleware.RequireValidUUID("id")).Patch("/advertiser/bookings/{id}", bookingHandler.AdvertiserUpdate)
+				r.Get("/advertiser/analytics/impressions", analyticsHandler.AdvertiserImpressions)
 			})
 
 			// Venue-scoped routes
@@ -124,8 +141,6 @@ func NewRouter(db *pgxpool.Pool, rdb *redis.Client, privateKey *rsa.PrivateKey, 
 			// Device routes — require device JWT
 			r.Group(func(r chi.Router) {
 				r.Use(middleware.DeviceAuth(publicKey))
-
-				r.Get("/devices", deviceHandler.List)
 
 				// Heartbeat and impression are rate-limited: 30 req/min per device
 				r.Group(func(r chi.Router) {

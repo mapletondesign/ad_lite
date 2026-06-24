@@ -51,8 +51,8 @@ func (s *Service) List(ctx context.Context, f ListFilter) ([]Slot, error) {
 		       to_char(start_time, 'HH24:MI'), to_char(end_time, 'HH24:MI'),
 		       duration_sec, price_cents, status, created_at
 		FROM ad_slots
-		WHERE ($1 = '' OR device_id = $1)
-		  AND ($2 = '' OR status = $2)
+		WHERE ($1 = '' OR device_id::text = $1)
+		  AND ($2 = '' OR status         = $2)
 		ORDER BY created_at DESC`
 
 	rows, err := s.db.Query(ctx, query, f.DeviceID, f.Status)
@@ -152,6 +152,29 @@ func validateCreate(req CreateRequest) error {
 	}
 	if req.PriceCents <= 0 {
 		return fmt.Errorf("price_cents must be greater than zero")
+	}
+	return nil
+}
+
+func (s *Service) Delete(ctx context.Context, id string) error {
+	var count int
+	err := s.db.QueryRow(ctx, `
+		SELECT COUNT(*) FROM bookings
+		WHERE slot_id = $1 AND status IN ('pending', 'active')`, id,
+	).Scan(&count)
+	if err != nil {
+		return fmt.Errorf("check bookings: %w", err)
+	}
+	if count > 0 {
+		return fmt.Errorf("slot has active or pending bookings and cannot be deleted")
+	}
+
+	tag, err := s.db.Exec(ctx, `DELETE FROM ad_slots WHERE id = $1`, id)
+	if err != nil {
+		return fmt.Errorf("delete slot: %w", err)
+	}
+	if tag.RowsAffected() == 0 {
+		return fmt.Errorf("slot not found")
 	}
 	return nil
 }
