@@ -39,3 +39,7 @@ coverage/
 *.tar.gz
 
 .claude/session_memory.db
+.claude/design-system.md
+
+# Go binaries
+server/seed
