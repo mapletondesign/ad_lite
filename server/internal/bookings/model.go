@@ -27,3 +27,13 @@ type ListFilter struct {
 	AdvertiserID string
 	Status       string
 }
+
+type AdminUpdateRequest struct {
+	Status      *string `json:"status,omitempty"`
+	CreativeURL *string `json:"creative_url,omitempty"`
+}
+
+type AdvertiserUpdateRequest struct {
+	CreativeURL *string `json:"creative_url,omitempty"`
+	Cancel      bool    `json:"cancel,omitempty"`
+}

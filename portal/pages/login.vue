@@ -7,15 +7,14 @@ definePageMeta({ layout: 'auth' })
 const auth = useAuthStore()
 const config = useRuntimeConfig()
 
-const email = ref('')
+const email    = ref('')
 const password = ref('')
-const loading = ref(false)
-const errorMessage = ref('')
+const loading  = ref(false)
+const error    = ref('')
 
 async function handleSubmit() {
-  errorMessage.value = ''
+  error.value = ''
   loading.value = true
-
   try {
     const result = await $fetch<TokenPair>('/api/v1/auth/login', {
       baseURL: config.public.apiBase,
@@ -25,7 +24,7 @@ async function handleSubmit() {
     auth.setTokens(result.access_token, result.refresh_token)
     await navigateTo('/')
   } catch {
-    errorMessage.value = 'Invalid email or password.'
+    error.value = 'Invalid email or password.'
   } finally {
     loading.value = false
   }
@@ -33,34 +32,32 @@ async function handleSubmit() {
 </script>
 
 <template>
-  <form @submit.prevent="handleSubmit">
-    <div class="mb-3">
-      <label class="form-label" for="email">Email</label>
-      <input
-        id="email"
-        v-model="email"
-        class="form-control"
-        type="email"
-        required
-        autocomplete="email"
-        placeholder="you@example.com"
-      />
-    </div>
-    <div class="mb-3">
-      <label class="form-label" for="password">Password</label>
-      <input
-        id="password"
-        v-model="password"
-        class="form-control"
-        type="password"
-        required
-        autocomplete="current-password"
-        placeholder="••••••••"
-      />
-    </div>
-    <div v-if="errorMessage" class="alert alert-danger py-2 small">{{ errorMessage }}</div>
-    <button class="btn btn-primary w-100" type="submit" :disabled="loading">
-      {{ loading ? 'Signing in…' : 'Sign in' }}
-    </button>
-  </form>
+  <v-form @submit.prevent="handleSubmit">
+    <v-text-field
+      v-model="email"
+      label="Email"
+      type="email"
+      variant="outlined"
+      density="comfortable"
+      autocomplete="email"
+      required
+      class="mb-2"
+    />
+    <v-text-field
+      v-model="password"
+      label="Password"
+      type="password"
+      variant="outlined"
+      density="comfortable"
+      autocomplete="current-password"
+      required
+      class="mb-4"
+    />
+    <v-alert v-if="error" type="error" density="compact" class="mb-4" rounded="lg">
+      {{ error }}
+    </v-alert>
+    <v-btn type="submit" color="primary" size="large" block :loading="loading">
+      Sign in
+    </v-btn>
+  </v-form>
 </template>

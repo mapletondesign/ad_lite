@@ -6,23 +6,27 @@ definePageMeta({ middleware: 'role' })
 const { apiFetch } = useApi()
 
 const advertisers = ref<Advertiser[]>([])
-const loading = ref(true)
-const errorMessage = ref('')
-const showForm = ref(false)
-const submitting = ref(false)
-const formError = ref('')
+const loading     = ref(true)
+const error       = ref('')
+const showForm    = ref(false)
+const submitting  = ref(false)
+const formError   = ref('')
+const snackbar    = ref(false)
 
-const form = reactive({
-  name: '',
-  email: '',
-})
+const form = reactive({ name: '', email: '' })
 
-async function loadAdvertisers() {
+const headers = [
+  { title: 'Name',    key: 'name' },
+  { title: 'Email',   key: 'email' },
+  { title: 'Created', key: 'created_at' },
+]
+
+async function load() {
   loading.value = true
   try {
     advertisers.value = await apiFetch<Advertiser[]>('/api/v1/advertisers')
   } catch {
-    errorMessage.value = 'Failed to load advertisers.'
+    error.value = 'Failed to load advertisers.'
   } finally {
     loading.value = false
   }
@@ -36,10 +40,10 @@ async function handleSubmit() {
       method: 'POST',
       body: { name: form.name, email: form.email },
     })
-    form.name = ''
-    form.email = ''
+    Object.assign(form, { name: '', email: '' })
     showForm.value = false
-    await loadAdvertisers()
+    snackbar.value = true
+    await load()
   } catch {
     formError.value = 'Failed to create advertiser.'
   } finally {
@@ -47,69 +51,62 @@ async function handleSubmit() {
   }
 }
 
-function formatDate(iso: string): string {
+function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString()
 }
 
-onMounted(loadAdvertisers)
+onMounted(load)
 </script>
 
 <template>
   <div>
-    <div class="d-flex align-items-center justify-content-between mb-4">
-      <h1 class="h4 fw-bold mb-0">Advertisers</h1>
-      <button class="btn btn-primary btn-sm" @click="showForm = !showForm">
+    <div class="d-flex align-center justify-space-between mb-6">
+      <div class="text-h5 font-weight-bold">Advertisers</div>
+      <v-btn
+        :prepend-icon="showForm ? 'mdi-close' : 'mdi-plus'"
+        color="primary"
+        variant="tonal"
+        @click="showForm = !showForm"
+      >
         {{ showForm ? 'Cancel' : 'Add Advertiser' }}
-      </button>
+      </v-btn>
     </div>
 
-    <div v-if="showForm" class="card mb-4">
-      <div class="card-header fw-semibold">New Advertiser</div>
-      <div class="card-body">
-        <form @submit.prevent="handleSubmit">
-          <div class="row g-3 mb-3">
-            <div class="col-md-6">
-              <label class="form-label" for="name">Name <span class="text-danger">*</span></label>
-              <input id="name" v-model="form.name" class="form-control" type="text" required />
+    <v-expand-transition>
+      <v-card v-if="showForm" class="mb-6" rounded="lg">
+        <v-card-title class="text-subtitle-1 font-weight-semibold pa-4 pb-2">New Advertiser</v-card-title>
+        <v-card-text>
+          <v-form @submit.prevent="handleSubmit">
+            <v-row>
+              <v-col cols="12" md="6">
+                <v-text-field v-model="form.name" label="Name" variant="outlined" density="comfortable" required />
+              </v-col>
+              <v-col cols="12" md="6">
+                <v-text-field v-model="form.email" label="Email" type="email" variant="outlined" density="comfortable" required />
+              </v-col>
+            </v-row>
+            <v-alert v-if="formError" type="error" density="compact" class="mb-4" rounded="lg">{{ formError }}</v-alert>
+            <div class="d-flex justify-end">
+              <v-btn type="submit" color="primary" :loading="submitting">Save Advertiser</v-btn>
             </div>
-            <div class="col-md-6">
-              <label class="form-label" for="email">Email <span class="text-danger">*</span></label>
-              <input id="email" v-model="form.email" class="form-control" type="email" required />
-            </div>
-          </div>
-          <div v-if="formError" class="alert alert-danger py-2 small">{{ formError }}</div>
-          <div class="d-flex justify-content-end">
-            <button class="btn btn-primary" type="submit" :disabled="submitting">
-              {{ submitting ? 'Saving…' : 'Save Advertiser' }}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+          </v-form>
+        </v-card-text>
+      </v-card>
+    </v-expand-transition>
 
-    <div v-if="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
+    <v-alert v-if="error" type="error" class="mb-4" rounded="lg">{{ error }}</v-alert>
 
-    <div class="card" :class="{ 'opacity-50': loading }">
-      <div v-if="loading" class="card-body text-muted">Loading…</div>
-      <table v-else class="table table-dark table-hover mb-0">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Created</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="advertiser in advertisers" :key="advertiser.id">
-            <td>{{ advertiser.name }}</td>
-            <td>{{ advertiser.email }}</td>
-            <td>{{ formatDate(advertiser.created_at) }}</td>
-          </tr>
-          <tr v-if="advertisers.length === 0">
-            <td colspan="3" class="text-center text-muted">No advertisers yet.</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <v-data-table
+      :headers="headers"
+      :items="advertisers"
+      :loading="loading"
+      rounded="lg"
+      hover
+    >
+      <template #item.created_at="{ item }">{{ formatDate(item.created_at) }}</template>
+      <template #no-data>No advertisers yet.</template>
+    </v-data-table>
+
+    <v-snackbar v-model="snackbar" color="success" timeout="3000">Advertiser created.</v-snackbar>
   </div>
 </template>

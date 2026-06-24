@@ -6,39 +6,54 @@ definePageMeta({ middleware: 'role' })
 const { apiFetch } = useApi()
 
 const bookings = ref<Booking[]>([])
-const loading = ref(true)
-const errorMessage = ref('')
+const loading  = ref(true)
+const error    = ref('')
 
-const activeCount    = computed(() => bookings.value.filter((b) => b.status === 'active').length)
-const pendingCount   = computed(() => bookings.value.filter((b) => b.status === 'pending').length)
+const activeCount     = computed(() => bookings.value.filter((b) => b.status === 'active').length)
+const pendingCount    = computed(() => bookings.value.filter((b) => b.status === 'pending').length)
 const totalSpentCents = computed(() =>
   bookings.value
     .filter((b) => b.status !== 'cancelled')
     .reduce((sum, b) => sum + b.price_cents, 0)
 )
 
-function formatCents(cents: number): string {
+const recentBookings = computed(() => bookings.value.slice(0, 5))
+
+const recentHeaders = [
+  { title: 'Slot ID',    key: 'slot_id' },
+  { title: 'Starts On', key: 'starts_on' },
+  { title: 'Ends On',   key: 'ends_on' },
+  { title: 'Price',     key: 'price_cents' },
+  { title: 'Status',    key: 'status' },
+]
+
+const bookingStatusColor: Record<string, string> = {
+  pending:   'warning',
+  active:    'success',
+  completed: 'secondary',
+  cancelled: 'error',
+}
+
+function formatCents(cents: number) {
   return `$${(cents / 100).toFixed(2)}`
 }
 
-function formatDate(iso: string): string {
+function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString()
 }
 
-const recentBookings = computed(() => bookings.value.slice(0, 5))
-
-const statusClass: Record<string, string> = {
-  pending:   'text-bg-warning',
-  active:    'text-bg-success',
-  completed: 'text-bg-secondary',
-  cancelled: 'text-bg-danger',
-}
+const stats = computed(() => [
+  { label: 'Total Bookings', value: bookings.value.length, icon: 'mdi-calendar-multiple',   color: 'primary' },
+  { label: 'Active',         value: activeCount.value,     icon: 'mdi-play-circle-outline',  color: 'success' },
+  { label: 'Pending',        value: pendingCount.value,    icon: 'mdi-clock-outline',         color: 'warning' },
+  { label: 'Total Spend',    value: formatCents(totalSpentCents.value), icon: 'mdi-currency-usd', color: 'info' },
+])
 
 onMounted(async () => {
   try {
     bookings.value = await apiFetch<Booking[]>('/api/v1/advertiser/bookings')
   } catch {
-    errorMessage.value = 'Failed to load dashboard data.'
+    error.value = 'Failed to load dashboard data.'
   } finally {
     loading.value = false
   }
@@ -47,83 +62,54 @@ onMounted(async () => {
 
 <template>
   <div>
-    <h1 class="h4 fw-bold mb-4">Advertiser Dashboard</h1>
+    <div class="text-h5 font-weight-bold mb-6">Advertiser Dashboard</div>
 
-    <div v-if="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
+    <v-alert v-if="error" type="error" class="mb-4" rounded="lg">{{ error }}</v-alert>
 
-    <div class="row g-3 mb-4">
-      <template v-if="loading">
-        <div v-for="n in 4" :key="n" class="col-6 col-md-3">
-          <div class="skeleton" />
-        </div>
-      </template>
+    <v-row class="mb-6">
+      <v-col v-if="loading" v-for="n in 4" :key="n" cols="6" md="3">
+        <v-skeleton-loader type="card" rounded="lg" />
+      </v-col>
       <template v-else>
-        <div class="col-6 col-md-3">
-          <div class="card h-100">
-            <div class="card-body">
-              <div class="fs-2 fw-bold">{{ bookings.length }}</div>
-              <div class="text-muted small">Total Bookings</div>
-            </div>
-          </div>
-        </div>
-        <div class="col-6 col-md-3">
-          <div class="card h-100">
-            <div class="card-body">
-              <div class="fs-2 fw-bold text-success">{{ activeCount }}</div>
-              <div class="text-muted small">Active</div>
-            </div>
-          </div>
-        </div>
-        <div class="col-6 col-md-3">
-          <div class="card h-100">
-            <div class="card-body">
-              <div class="fs-2 fw-bold text-warning">{{ pendingCount }}</div>
-              <div class="text-muted small">Pending</div>
-            </div>
-          </div>
-        </div>
-        <div class="col-6 col-md-3">
-          <div class="card h-100">
-            <div class="card-body">
-              <div class="fs-2 fw-bold">{{ formatCents(totalSpentCents) }}</div>
-              <div class="text-muted small">Total Spend</div>
-            </div>
-          </div>
-        </div>
+        <v-col v-for="stat in stats" :key="stat.label" cols="6" md="3">
+          <v-card rounded="lg" elevation="0" border>
+            <v-card-text class="d-flex align-center ga-3">
+              <v-icon :color="stat.color" size="36">{{ stat.icon }}</v-icon>
+              <div>
+                <div class="text-h5 font-weight-bold">{{ stat.value }}</div>
+                <div class="text-caption text-medium-emphasis">{{ stat.label }}</div>
+              </div>
+            </v-card-text>
+          </v-card>
+        </v-col>
       </template>
-    </div>
+    </v-row>
 
-    <div v-if="!loading && recentBookings.length > 0">
-      <div class="d-flex align-items-center justify-content-between mb-2">
-        <h2 class="h6 fw-semibold mb-0">Recent Bookings</h2>
-        <NuxtLink to="/advertiser/bookings" class="small">View all</NuxtLink>
+    <template v-if="!loading && recentBookings.length > 0">
+      <div class="d-flex align-center justify-space-between mb-3">
+        <div class="text-subtitle-1 font-weight-medium">Recent Bookings</div>
+        <NuxtLink to="/advertiser/bookings" class="text-caption text-primary">View all</NuxtLink>
       </div>
-      <div class="card">
-        <table class="table table-dark table-hover mb-0">
-          <thead>
-            <tr>
-              <th>Slot ID</th>
-              <th>Starts On</th>
-              <th>Ends On</th>
-              <th>Price</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="booking in recentBookings" :key="booking.id">
-              <td class="font-monospace small text-muted">{{ booking.slot_id }}</td>
-              <td>{{ formatDate(booking.starts_on) }}</td>
-              <td>{{ formatDate(booking.ends_on) }}</td>
-              <td>{{ formatCents(booking.price_cents) }}</td>
-              <td>
-                <span class="badge" :class="statusClass[booking.status] ?? 'text-bg-secondary'">
-                  {{ booking.status }}
-                </span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+
+      <v-data-table
+        :headers="recentHeaders"
+        :items="recentBookings"
+        rounded="lg"
+        hover
+        hide-default-footer
+      >
+        <template #item.slot_id="{ item }">
+          <span class="monospace text-medium-emphasis">{{ item.slot_id.slice(0, 8) }}…</span>
+        </template>
+        <template #item.starts_on="{ item }">{{ formatDate(item.starts_on) }}</template>
+        <template #item.ends_on="{ item }">{{ formatDate(item.ends_on) }}</template>
+        <template #item.price_cents="{ item }">{{ formatCents(item.price_cents) }}</template>
+        <template #item.status="{ item }">
+          <v-chip :color="bookingStatusColor[item.status] ?? 'secondary'" size="small" variant="tonal">
+            {{ item.status }}
+          </v-chip>
+        </template>
+      </v-data-table>
+    </template>
   </div>
 </template>

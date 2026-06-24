@@ -3,22 +3,24 @@ definePageMeta({ middleware: 'role' })
 
 const { apiFetch } = useApi()
 
-const file = ref<File | null>(null)
-const uploading = ref(false)
+const file        = ref<File | null>(null)
+const uploading   = ref(false)
 const uploadedUrl = ref('')
-const errorMessage = ref('')
+const error       = ref('')
+const snackbar    = ref(false)
 
-function onFileChange(e: Event) {
-  const input = e.target as HTMLInputElement
-  file.value = input.files?.[0] ?? null
+const ACCEPTED = 'image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm'
+
+function onFileChange(val: File | null) {
+  file.value = val
   uploadedUrl.value = ''
-  errorMessage.value = ''
+  error.value = ''
 }
 
 async function handleUpload() {
   if (!file.value) return
   uploading.value = true
-  errorMessage.value = ''
+  error.value = ''
   uploadedUrl.value = ''
 
   const form = new FormData()
@@ -30,68 +32,72 @@ async function handleUpload() {
       body: form,
     })
     uploadedUrl.value = result.url
+    snackbar.value = true
   } catch {
-    errorMessage.value = 'Upload failed. Accepted formats: JPEG, PNG, GIF, WebP, MP4, WebM.'
+    error.value = 'Upload failed. Accepted formats: JPEG, PNG, GIF, WebP, MP4, WebM.'
   } finally {
     uploading.value = false
   }
 }
+
+const isVideo = computed(() => file.value?.type.startsWith('video/') ?? false)
 </script>
 
 <template>
   <div>
-    <h1 class="h4 fw-bold mb-4">Upload Creative</h1>
+    <div class="text-h5 font-weight-bold mb-6">Upload Creative</div>
 
-    <div class="card" style="max-width: 520px;">
-      <div class="card-body">
-        <div class="mb-3">
-          <label class="form-label" for="creative-file">
-            Ad Creative <span class="text-muted small">(image or video)</span>
-          </label>
-          <input
-            id="creative-file"
-            class="form-control"
-            type="file"
-            accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm"
-            @change="onFileChange"
-          />
-          <div class="form-text">Accepted: JPEG, PNG, GIF, WebP, MP4, WebM. Max 100 MB.</div>
+    <v-card rounded="lg" style="max-width: 560px;">
+      <v-card-text>
+        <v-file-input
+          v-model="file"
+          label="Ad Creative"
+          hint="Accepted: JPEG, PNG, GIF, WebP, MP4, WebM. Max 100 MB."
+          persistent-hint
+          :accept="ACCEPTED"
+          variant="outlined"
+          density="comfortable"
+          prepend-icon=""
+          prepend-inner-icon="mdi-paperclip"
+          class="mb-2"
+          @update:model-value="onFileChange"
+        />
+
+        <v-alert v-if="error" type="error" density="compact" class="mb-4" rounded="lg">{{ error }}</v-alert>
+
+        <div class="d-flex justify-end">
+          <v-btn
+            color="primary"
+            :loading="uploading"
+            :disabled="!file"
+            @click="handleUpload"
+          >
+            Upload
+          </v-btn>
         </div>
+      </v-card-text>
+    </v-card>
 
-        <div v-if="errorMessage" class="alert alert-danger py-2 small">{{ errorMessage }}</div>
-
-        <div v-if="uploadedUrl" class="alert alert-success py-2 small">
-          Uploaded successfully.
-          <a :href="uploadedUrl" target="_blank" class="alert-link ms-1">View file</a>
-        </div>
-
-        <button
-          class="btn btn-primary"
-          type="button"
-          :disabled="!file || uploading"
-          @click="handleUpload"
-        >
-          {{ uploading ? 'Uploading…' : 'Upload' }}
-        </button>
-      </div>
-    </div>
-
-    <div v-if="uploadedUrl" class="mt-4">
-      <div class="text-muted small mb-2">Preview</div>
+    <div v-if="uploadedUrl" class="mt-6">
+      <div class="text-caption text-medium-emphasis mb-2">Preview</div>
       <video
-        v-if="file?.type.startsWith('video/')"
+        v-if="isVideo"
         :src="uploadedUrl"
         controls
-        class="rounded border"
-        style="max-width: 480px; max-height: 270px;"
+        class="rounded-lg"
+        style="max-width: 480px; max-height: 270px; display: block;"
       />
-      <img
+      <v-img
         v-else
         :src="uploadedUrl"
         alt="Uploaded creative"
-        class="rounded border"
-        style="max-width: 480px; max-height: 270px; object-fit: contain;"
+        max-width="480"
+        max-height="270"
+        cover
+        rounded="lg"
       />
     </div>
+
+    <v-snackbar v-model="snackbar" color="success" timeout="3000">Creative uploaded successfully.</v-snackbar>
   </div>
 </template>

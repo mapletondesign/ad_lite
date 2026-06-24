@@ -5,94 +5,101 @@ definePageMeta({ middleware: 'role' })
 
 const { apiFetch } = useApi()
 
-const allBookings = ref<Booking[]>([])
-const loading = ref(true)
-const errorMessage = ref('')
-const statusFilter = ref<string>('all')
+const allBookings  = ref<Booking[]>([])
+const loading      = ref(true)
+const error        = ref('')
+const statusFilter = ref('all')
 
-const statusOptions = ['all', 'pending', 'active', 'completed', 'cancelled'] as const
+const statusOptions = [
+  { title: 'All',       value: 'all' },
+  { title: 'Pending',   value: 'pending' },
+  { title: 'Active',    value: 'active' },
+  { title: 'Completed', value: 'completed' },
+  { title: 'Cancelled', value: 'cancelled' },
+]
 
-const filteredBookings = computed(() => {
-  if (statusFilter.value === 'all') return allBookings.value
-  return allBookings.value.filter((b) => b.status === statusFilter.value)
-})
+const filteredBookings = computed(() =>
+  statusFilter.value === 'all'
+    ? allBookings.value
+    : allBookings.value.filter((b) => b.status === statusFilter.value)
+)
 
-async function loadBookings() {
-  loading.value = true
-  try {
-    allBookings.value = await apiFetch<Booking[]>('/api/v1/bookings')
-  } catch {
-    errorMessage.value = 'Failed to load bookings.'
-  } finally {
-    loading.value = false
-  }
+const headers = [
+  { title: 'Slot ID',       key: 'slot_id' },
+  { title: 'Advertiser ID', key: 'advertiser_id' },
+  { title: 'Starts On',     key: 'starts_on' },
+  { title: 'Ends On',       key: 'ends_on' },
+  { title: 'Price',         key: 'price_cents' },
+  { title: 'Status',        key: 'status' },
+]
+
+const bookingStatusColor: Record<string, string> = {
+  pending:   'warning',
+  active:    'success',
+  completed: 'secondary',
+  cancelled: 'error',
 }
 
-function formatDate(iso: string): string {
+function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString()
 }
 
-function formatCents(cents: number): string {
+function formatCents(cents: number) {
   return `$${(cents / 100).toFixed(2)}`
 }
 
-const bookingStatusClass: Record<string, string> = {
-  pending:   'text-bg-warning',
-  active:    'text-bg-success',
-  completed: 'text-bg-secondary',
-  cancelled: 'text-bg-danger',
-}
-
-onMounted(loadBookings)
+onMounted(async () => {
+  try {
+    allBookings.value = await apiFetch<Booking[]>('/api/v1/bookings')
+  } catch {
+    error.value = 'Failed to load bookings.'
+  } finally {
+    loading.value = false
+  }
+})
 </script>
 
 <template>
   <div>
-    <div class="d-flex align-items-center justify-content-between mb-4">
-      <h1 class="h4 fw-bold mb-0">Bookings</h1>
-      <div class="d-flex align-items-center gap-2">
-        <label class="form-label text-muted small mb-0" for="status-filter">Status</label>
-        <select id="status-filter" v-model="statusFilter" class="form-select form-select-sm w-auto">
-          <option v-for="opt in statusOptions" :key="opt" :value="opt">
-            {{ opt.charAt(0).toUpperCase() + opt.slice(1) }}
-          </option>
-        </select>
-      </div>
+    <div class="d-flex align-center justify-space-between mb-6">
+      <div class="text-h5 font-weight-bold">Bookings</div>
+      <v-select
+        v-model="statusFilter"
+        :items="statusOptions"
+        item-title="title"
+        item-value="value"
+        label="Status"
+        variant="outlined"
+        density="compact"
+        hide-details
+        style="max-width: 160px;"
+      />
     </div>
 
-    <div v-if="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
+    <v-alert v-if="error" type="error" class="mb-4" rounded="lg">{{ error }}</v-alert>
 
-    <div class="card" :class="{ 'opacity-50': loading }">
-      <div v-if="loading" class="card-body text-muted">Loading…</div>
-      <table v-else class="table table-dark table-hover mb-0">
-        <thead>
-          <tr>
-            <th>Slot ID</th>
-            <th>Advertiser ID</th>
-            <th>Starts On</th>
-            <th>Ends On</th>
-            <th>Price</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="booking in filteredBookings" :key="booking.id">
-            <td class="font-monospace small text-muted">{{ booking.slot_id }}</td>
-            <td class="font-monospace small text-muted">{{ booking.advertiser_id }}</td>
-            <td>{{ formatDate(booking.starts_on) }}</td>
-            <td>{{ formatDate(booking.ends_on) }}</td>
-            <td>{{ formatCents(booking.price_cents) }}</td>
-            <td>
-              <span class="badge" :class="bookingStatusClass[booking.status] ?? 'text-bg-secondary'">
-                {{ booking.status }}
-              </span>
-            </td>
-          </tr>
-          <tr v-if="filteredBookings.length === 0">
-            <td colspan="6" class="text-center text-muted">No bookings found.</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <v-data-table
+      :headers="headers"
+      :items="filteredBookings"
+      :loading="loading"
+      rounded="lg"
+      hover
+    >
+      <template #item.slot_id="{ item }">
+        <span class="monospace text-medium-emphasis">{{ item.slot_id.slice(0, 8) }}…</span>
+      </template>
+      <template #item.advertiser_id="{ item }">
+        <span class="monospace text-medium-emphasis">{{ item.advertiser_id.slice(0, 8) }}…</span>
+      </template>
+      <template #item.starts_on="{ item }">{{ formatDate(item.starts_on) }}</template>
+      <template #item.ends_on="{ item }">{{ formatDate(item.ends_on) }}</template>
+      <template #item.price_cents="{ item }">{{ formatCents(item.price_cents) }}</template>
+      <template #item.status="{ item }">
+        <v-chip :color="bookingStatusColor[item.status] ?? 'secondary'" size="small" variant="tonal">
+          {{ item.status }}
+        </v-chip>
+      </template>
+      <template #no-data>No bookings found.</template>
+    </v-data-table>
   </div>
 </template>

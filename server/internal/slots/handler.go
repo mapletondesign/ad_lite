@@ -7,17 +7,22 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	chimw "github.com/go-chi/chi/v5/middleware"
+	"github.com/mapletondesign/ad_lite/api/middleware"
+	"github.com/mapletondesign/ad_lite/internal/audit"
 )
 
 type Handler struct {
-	svc *Service
+	svc      *Service
+	auditSvc *audit.Service
 }
 
-func NewHandler(svc *Service) *Handler {
-	return &Handler{svc: svc}
+func NewHandler(svc *Service, auditSvc *audit.Service) *Handler {
+	return &Handler{svc: svc, auditSvc: auditSvc}
 }
 
 func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
+	actorID, _ := r.Context().Value(middleware.UserIDKey).(string)
+
 	var req CreateRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")
@@ -29,6 +34,10 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
+	h.auditSvc.Log(actorID, "create_slot", "ad_slots", slot.ID, map[string]any{
+		"device_id":   slot.DeviceID,
+		"price_cents": slot.PriceCents,
+	})
 	writeJSON(w, http.StatusCreated, slot)
 }
 
@@ -51,7 +60,9 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
+	actorID, _ := r.Context().Value(middleware.UserIDKey).(string)
 	id := chi.URLParam(r, "id")
+
 	var req UpdateRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")
@@ -67,7 +78,28 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
+	h.auditSvc.Log(actorID, "update_slot", "ad_slots", slot.ID, map[string]any{"status": slot.Status})
 	writeJSON(w, http.StatusOK, slot)
+}
+
+func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
+	actorID, _ := r.Context().Value(middleware.UserIDKey).(string)
+	id := chi.URLParam(r, "id")
+
+	if err := h.svc.Delete(r.Context(), id); err != nil {
+		switch err.Error() {
+		case "slot not found":
+			writeError(w, http.StatusNotFound, "slot not found")
+		case "slot has active or pending bookings and cannot be deleted":
+			writeError(w, http.StatusConflict, err.Error())
+		default:
+			log.Printf("[%s] delete slot %s: %v", chimw.GetReqID(r.Context()), id, err)
+			writeError(w, http.StatusInternalServerError, "internal server error")
+		}
+		return
+	}
+	h.auditSvc.Log(actorID, "delete_slot", "ad_slots", id, nil)
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func writeJSON(w http.ResponseWriter, status int, v any) {

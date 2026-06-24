@@ -5,15 +5,21 @@ definePageMeta({ middleware: 'role' })
 
 const { apiFetch } = useApi()
 
-const loading = ref(true)
-const errorMessage = ref('')
-
-const venues = ref<Venue[]>([])
+const loading     = ref(true)
+const error       = ref('')
+const venues      = ref<Venue[]>([])
 const advertisers = ref<Advertiser[]>([])
-const devices = ref<Device[]>([])
-const bookings = ref<Booking[]>([])
+const devices     = ref<Device[]>([])
+const bookings    = ref<Booking[]>([])
 
 const onlineCount = computed(() => devices.value.filter((d) => d.status === 'online').length)
+
+const stats = computed(() => [
+  { label: 'Total Venues',      value: venues.value.length,      icon: 'mdi-store',          color: 'primary' },
+  { label: 'Total Advertisers', value: advertisers.value.length, icon: 'mdi-account-group',  color: 'secondary' },
+  { label: 'Total Devices',     value: devices.value.length,     icon: 'mdi-monitor',         color: 'info',    sub: `${onlineCount.value} online` },
+  { label: 'Total Bookings',    value: bookings.value.length,    icon: 'mdi-calendar-check',  color: 'success' },
+])
 
 onMounted(async () => {
   try {
@@ -23,12 +29,12 @@ onMounted(async () => {
       apiFetch<Device[]>('/api/v1/devices'),
       apiFetch<Booking[]>('/api/v1/bookings'),
     ])
-    venues.value = v
+    venues.value      = v
     advertisers.value = a
-    devices.value = d
-    bookings.value = b
+    devices.value     = d
+    bookings.value    = b
   } catch {
-    errorMessage.value = 'Failed to load dashboard data.'
+    error.value = 'Failed to load dashboard data.'
   } finally {
     loading.value = false
   }
@@ -37,53 +43,24 @@ onMounted(async () => {
 
 <template>
   <div>
-    <h1 class="h4 fw-bold mb-4">Dashboard</h1>
+    <div class="text-h5 font-weight-bold mb-6">Dashboard</div>
 
-    <div v-if="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
+    <v-alert v-if="error" type="error" class="mb-6" rounded="lg">{{ error }}</v-alert>
 
-    <div class="row g-3">
-      <template v-if="loading">
-        <div v-for="n in 4" :key="n" class="col-6 col-md-3">
-          <div class="skeleton" />
-        </div>
-      </template>
-      <template v-else>
-        <div class="col-6 col-md-3">
-          <div class="card h-100">
-            <div class="card-body">
-              <div class="fs-2 fw-bold">{{ venues.length }}</div>
-              <div class="text-muted small">Total Venues</div>
+    <v-row>
+      <v-col v-for="stat in stats" :key="stat.label" cols="6" md="3">
+        <v-skeleton-loader v-if="loading" type="card" />
+        <v-card v-else rounded="lg" height="100%">
+          <v-card-text>
+            <div class="d-flex align-center justify-space-between mb-2">
+              <v-icon :color="stat.color" size="28">{{ stat.icon }}</v-icon>
             </div>
-          </div>
-        </div>
-        <div class="col-6 col-md-3">
-          <div class="card h-100">
-            <div class="card-body">
-              <div class="fs-2 fw-bold">{{ advertisers.length }}</div>
-              <div class="text-muted small">Total Advertisers</div>
-            </div>
-          </div>
-        </div>
-        <div class="col-6 col-md-3">
-          <div class="card h-100">
-            <div class="card-body">
-              <div class="fs-2 fw-bold">
-                {{ devices.length }}
-                <span class="fs-6 fw-normal text-success">{{ onlineCount }} online</span>
-              </div>
-              <div class="text-muted small">Total Devices</div>
-            </div>
-          </div>
-        </div>
-        <div class="col-6 col-md-3">
-          <div class="card h-100">
-            <div class="card-body">
-              <div class="fs-2 fw-bold">{{ bookings.length }}</div>
-              <div class="text-muted small">Total Bookings</div>
-            </div>
-          </div>
-        </div>
-      </template>
-    </div>
+            <div class="text-h4 font-weight-bold">{{ stat.value }}</div>
+            <div v-if="stat.sub" class="text-caption text-success">{{ stat.sub }}</div>
+            <div class="text-body-2 text-medium-emphasis mt-1">{{ stat.label }}</div>
+          </v-card-text>
+        </v-card>
+      </v-col>
+    </v-row>
   </div>
 </template>

@@ -5,12 +5,23 @@ definePageMeta({ middleware: 'role' })
 
 const { apiFetch } = useApi()
 
-const allBookings = ref<Booking[]>([])
-const loading = ref(true)
-const errorMessage = ref('')
-const statusFilter = ref('all')
+const allBookings   = ref<Booking[]>([])
+const loading       = ref(true)
+const error         = ref('')
+const statusFilter  = ref('all')
+const cancelDialog  = ref(false)
+const cancelTarget  = ref<Booking | null>(null)
+const cancelling    = ref(false)
+const snackbar      = ref(false)
+const snackbarMsg   = ref('')
 
-const statusOptions = ['all', 'pending', 'active', 'completed', 'cancelled'] as const
+const statusOptions = [
+  { title: 'All',       value: 'all' },
+  { title: 'Pending',   value: 'pending' },
+  { title: 'Active',    value: 'active' },
+  { title: 'Completed', value: 'completed' },
+  { title: 'Cancelled', value: 'cancelled' },
+]
 
 const filteredBookings = computed(() =>
   statusFilter.value === 'all'
@@ -18,30 +29,65 @@ const filteredBookings = computed(() =>
     : allBookings.value.filter((b) => b.status === statusFilter.value)
 )
 
+const headers = [
+  { title: 'Slot ID',   key: 'slot_id' },
+  { title: 'Starts On', key: 'starts_on' },
+  { title: 'Ends On',   key: 'ends_on' },
+  { title: 'Price',     key: 'price_cents' },
+  { title: 'Status',    key: 'status' },
+  { title: 'Creative',  key: 'creative_url' },
+  { title: '',          key: 'actions', sortable: false },
+]
+
+const bookingStatusColor: Record<string, string> = {
+  pending:   'warning',
+  active:    'success',
+  completed: 'secondary',
+  cancelled: 'error',
+}
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString()
+}
+
+function formatCents(cents: number) {
+  return `$${(cents / 100).toFixed(2)}`
+}
+
 async function load() {
   loading.value = true
   try {
     allBookings.value = await apiFetch<Booking[]>('/api/v1/advertiser/bookings')
   } catch {
-    errorMessage.value = 'Failed to load bookings.'
+    error.value = 'Failed to load bookings.'
   } finally {
     loading.value = false
   }
 }
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString()
+function promptCancel(booking: Booking) {
+  cancelTarget.value = booking
+  cancelDialog.value = true
 }
 
-function formatCents(cents: number): string {
-  return `$${(cents / 100).toFixed(2)}`
-}
-
-const statusClass: Record<string, string> = {
-  pending:   'text-bg-warning',
-  active:    'text-bg-success',
-  completed: 'text-bg-secondary',
-  cancelled: 'text-bg-danger',
+async function confirmCancel() {
+  if (!cancelTarget.value) return
+  cancelling.value = true
+  try {
+    await apiFetch(`/api/v1/advertiser/bookings/${cancelTarget.value.id}`, {
+      method: 'PATCH',
+      body: { cancel: true },
+    })
+    cancelDialog.value = false
+    cancelTarget.value = null
+    snackbarMsg.value = 'Booking cancelled.'
+    snackbar.value = true
+    await load()
+  } catch (e: any) {
+    error.value = e?.data?.error ?? 'Failed to cancel booking.'
+  } finally {
+    cancelling.value = false
+  }
 }
 
 onMounted(load)
@@ -49,56 +95,88 @@ onMounted(load)
 
 <template>
   <div>
-    <div class="d-flex align-items-center justify-content-between mb-4">
-      <h1 class="h4 fw-bold mb-0">My Bookings</h1>
-      <div class="d-flex align-items-center gap-2">
-        <label class="form-label text-muted small mb-0" for="status-filter">Status</label>
-        <select id="status-filter" v-model="statusFilter" class="form-select form-select-sm w-auto">
-          <option v-for="opt in statusOptions" :key="opt" :value="opt">
-            {{ opt.charAt(0).toUpperCase() + opt.slice(1) }}
-          </option>
-        </select>
+    <div class="d-flex align-center justify-space-between mb-6">
+      <div class="text-h5 font-weight-bold">My Bookings</div>
+      <div class="d-flex align-center ga-3">
+        <v-btn
+          prepend-icon="mdi-plus"
+          color="primary"
+          variant="tonal"
+          to="/advertiser/new-booking"
+        >
+          New Booking
+        </v-btn>
+        <v-select
+          v-model="statusFilter"
+          :items="statusOptions"
+          item-title="title"
+          item-value="value"
+          label="Status"
+          variant="outlined"
+          density="compact"
+          hide-details
+          style="max-width: 160px;"
+        />
       </div>
     </div>
 
-    <div v-if="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
+    <v-alert v-if="error" type="error" class="mb-4" rounded="lg">{{ error }}</v-alert>
 
-    <div class="card" :class="{ 'opacity-50': loading }">
-      <div v-if="loading" class="card-body text-muted">Loading…</div>
-      <table v-else class="table table-dark table-hover mb-0">
-        <thead>
-          <tr>
-            <th>Slot ID</th>
-            <th>Starts On</th>
-            <th>Ends On</th>
-            <th>Price</th>
-            <th>Status</th>
-            <th>Creative</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="booking in filteredBookings" :key="booking.id">
-            <td class="font-monospace small text-muted">{{ booking.slot_id }}</td>
-            <td>{{ formatDate(booking.starts_on) }}</td>
-            <td>{{ formatDate(booking.ends_on) }}</td>
-            <td>{{ formatCents(booking.price_cents) }}</td>
-            <td>
-              <span class="badge" :class="statusClass[booking.status] ?? 'text-bg-secondary'">
-                {{ booking.status }}
-              </span>
-            </td>
-            <td>
-              <a v-if="booking.creative_url" :href="booking.creative_url" target="_blank" class="small">
-                View
-              </a>
-              <span v-else class="text-muted small">—</span>
-            </td>
-          </tr>
-          <tr v-if="filteredBookings.length === 0">
-            <td colspan="6" class="text-center text-muted">No bookings found.</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <v-data-table
+      :headers="headers"
+      :items="filteredBookings"
+      :loading="loading"
+      rounded="lg"
+      hover
+    >
+      <template #item.slot_id="{ item }">
+        <span class="monospace text-medium-emphasis">{{ item.slot_id.slice(0, 8) }}…</span>
+      </template>
+      <template #item.starts_on="{ item }">{{ formatDate(item.starts_on) }}</template>
+      <template #item.ends_on="{ item }">{{ formatDate(item.ends_on) }}</template>
+      <template #item.price_cents="{ item }">{{ formatCents(item.price_cents) }}</template>
+      <template #item.status="{ item }">
+        <v-chip :color="bookingStatusColor[item.status] ?? 'secondary'" size="small" variant="tonal">
+          {{ item.status }}
+        </v-chip>
+      </template>
+      <template #item.creative_url="{ item }">
+        <a v-if="item.creative_url" :href="item.creative_url" target="_blank" class="text-primary text-caption">
+          View
+        </a>
+        <span v-else class="text-medium-emphasis">—</span>
+      </template>
+      <template #item.actions="{ item }">
+        <v-btn
+          v-if="item.status === 'pending' || item.status === 'active'"
+          size="small"
+          variant="text"
+          color="error"
+          @click="promptCancel(item)"
+        >
+          Cancel
+        </v-btn>
+      </template>
+      <template #no-data>No bookings found.</template>
+    </v-data-table>
+
+    <!-- Cancel confirmation dialog -->
+    <v-dialog v-model="cancelDialog" max-width="420">
+      <v-card rounded="lg">
+        <v-card-title class="text-subtitle-1 font-weight-semibold pa-4 pb-2">Cancel Booking</v-card-title>
+        <v-card-text>
+          Are you sure you want to cancel this booking? This action cannot be undone.
+        </v-card-text>
+        <v-card-actions class="pa-4 pt-2">
+          <v-spacer />
+          <v-btn variant="text" @click="cancelDialog = false">Keep</v-btn>
+          <v-btn color="error" variant="tonal" :loading="cancelling" @click="confirmCancel">
+            Cancel Booking
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <v-snackbar v-model="snackbar" color="success" timeout="3000">{{ snackbarMsg }}</v-snackbar>
   </div>
 </template>

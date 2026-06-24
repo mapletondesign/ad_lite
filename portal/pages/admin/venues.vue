@@ -5,27 +5,30 @@ definePageMeta({ middleware: 'role' })
 
 const { apiFetch } = useApi()
 
-const venues = ref<Venue[]>([])
-const loading = ref(true)
-const errorMessage = ref('')
-const showForm = ref(false)
+const venues     = ref<Venue[]>([])
+const loading    = ref(true)
+const error      = ref('')
+const showForm   = ref(false)
 const submitting = ref(false)
-const formError = ref('')
+const formError  = ref('')
+const snackbar   = ref(false)
 
-const form = reactive({
-  name: '',
-  category: '',
-  address: '',
-  city: '',
-  state: '',
-})
+const form = reactive({ name: '', category: '', address: '', city: '', state: '' })
 
-async function loadVenues() {
+const headers = [
+  { title: 'Name',     key: 'name' },
+  { title: 'Category', key: 'category' },
+  { title: 'City',     key: 'city' },
+  { title: 'State',    key: 'state' },
+  { title: 'Created',  key: 'created_at' },
+]
+
+async function load() {
   loading.value = true
   try {
     venues.value = await apiFetch<Venue[]>('/api/v1/venues')
   } catch {
-    errorMessage.value = 'Failed to load venues.'
+    error.value = 'Failed to load venues.'
   } finally {
     loading.value = false
   }
@@ -38,20 +41,17 @@ async function handleSubmit() {
     await apiFetch<Venue>('/api/v1/venues', {
       method: 'POST',
       body: {
-        name: form.name,
+        name:     form.name,
         category: form.category || null,
-        address: form.address || null,
-        city: form.city || null,
-        state: form.state || null,
+        address:  form.address  || null,
+        city:     form.city     || null,
+        state:    form.state    || null,
       },
     })
-    form.name = ''
-    form.category = ''
-    form.address = ''
-    form.city = ''
-    form.state = ''
+    Object.assign(form, { name: '', category: '', address: '', city: '', state: '' })
     showForm.value = false
-    await loadVenues()
+    snackbar.value = true
+    await load()
   } catch {
     formError.value = 'Failed to create venue.'
   } finally {
@@ -59,87 +59,74 @@ async function handleSubmit() {
   }
 }
 
-function formatDate(iso: string): string {
+function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString()
 }
 
-onMounted(loadVenues)
+onMounted(load)
 </script>
 
 <template>
   <div>
-    <div class="d-flex align-items-center justify-content-between mb-4">
-      <h1 class="h4 fw-bold mb-0">Venues</h1>
-      <button class="btn btn-primary btn-sm" @click="showForm = !showForm">
+    <div class="d-flex align-center justify-space-between mb-6">
+      <div class="text-h5 font-weight-bold">Venues</div>
+      <v-btn
+        :prepend-icon="showForm ? 'mdi-close' : 'mdi-plus'"
+        color="primary"
+        variant="tonal"
+        @click="showForm = !showForm"
+      >
         {{ showForm ? 'Cancel' : 'Add Venue' }}
-      </button>
+      </v-btn>
     </div>
 
-    <div v-if="showForm" class="card mb-4">
-      <div class="card-header fw-semibold">New Venue</div>
-      <div class="card-body">
-        <form @submit.prevent="handleSubmit">
-          <div class="row g-3 mb-3">
-            <div class="col-md-6">
-              <label class="form-label" for="name">Name <span class="text-danger">*</span></label>
-              <input id="name" v-model="form.name" class="form-control" type="text" required />
+    <v-expand-transition>
+      <v-card v-if="showForm" class="mb-6" rounded="lg">
+        <v-card-title class="text-subtitle-1 font-weight-semibold pa-4 pb-2">New Venue</v-card-title>
+        <v-card-text>
+          <v-form @submit.prevent="handleSubmit">
+            <v-row>
+              <v-col cols="12" md="6">
+                <v-text-field v-model="form.name" label="Name" variant="outlined" density="comfortable" required />
+              </v-col>
+              <v-col cols="12" md="6">
+                <v-text-field v-model="form.category" label="Category" variant="outlined" density="comfortable" placeholder="restaurant, gym, retail…" />
+              </v-col>
+              <v-col cols="12">
+                <v-text-field v-model="form.address" label="Address" variant="outlined" density="comfortable" />
+              </v-col>
+              <v-col cols="12" md="6">
+                <v-text-field v-model="form.city" label="City" variant="outlined" density="comfortable" />
+              </v-col>
+              <v-col cols="12" md="6">
+                <v-text-field v-model="form.state" label="State" variant="outlined" density="comfortable" />
+              </v-col>
+            </v-row>
+            <v-alert v-if="formError" type="error" density="compact" class="mb-4" rounded="lg">{{ formError }}</v-alert>
+            <div class="d-flex justify-end">
+              <v-btn type="submit" color="primary" :loading="submitting">Save Venue</v-btn>
             </div>
-            <div class="col-md-6">
-              <label class="form-label" for="category">Category</label>
-              <input id="category" v-model="form.category" class="form-control" type="text" placeholder="restaurant, gym, retail…" />
-            </div>
-          </div>
-          <div class="mb-3">
-            <label class="form-label" for="address">Address</label>
-            <input id="address" v-model="form.address" class="form-control" type="text" />
-          </div>
-          <div class="row g-3 mb-3">
-            <div class="col-md-6">
-              <label class="form-label" for="city">City</label>
-              <input id="city" v-model="form.city" class="form-control" type="text" />
-            </div>
-            <div class="col-md-6">
-              <label class="form-label" for="state">State</label>
-              <input id="state" v-model="form.state" class="form-control" type="text" />
-            </div>
-          </div>
-          <div v-if="formError" class="alert alert-danger py-2 small">{{ formError }}</div>
-          <div class="d-flex justify-content-end">
-            <button class="btn btn-primary" type="submit" :disabled="submitting">
-              {{ submitting ? 'Saving…' : 'Save Venue' }}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+          </v-form>
+        </v-card-text>
+      </v-card>
+    </v-expand-transition>
 
-    <div v-if="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
+    <v-alert v-if="error" type="error" class="mb-4" rounded="lg">{{ error }}</v-alert>
 
-    <div class="card" :class="{ 'opacity-50': loading }">
-      <div v-if="loading" class="card-body text-muted">Loading…</div>
-      <table v-else class="table table-dark table-hover mb-0">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Category</th>
-            <th>City</th>
-            <th>State</th>
-            <th>Created</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="venue in venues" :key="venue.id">
-            <td>{{ venue.name }}</td>
-            <td>{{ venue.category ?? '—' }}</td>
-            <td>{{ venue.city ?? '—' }}</td>
-            <td>{{ venue.state ?? '—' }}</td>
-            <td>{{ formatDate(venue.created_at) }}</td>
-          </tr>
-          <tr v-if="venues.length === 0">
-            <td colspan="5" class="text-center text-muted">No venues yet.</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <v-data-table
+      :headers="headers"
+      :items="venues"
+      :loading="loading"
+      rounded="lg"
+      hover
+    >
+      <template #item.category="{ item }">{{ item.category ?? '—' }}</template>
+      <template #item.city="{ item }">{{ item.city ?? '—' }}</template>
+      <template #item.state="{ item }">{{ item.state ?? '—' }}</template>
+      <template #item.created_at="{ item }">{{ formatDate(item.created_at) }}</template>
+      <template #no-data>No venues yet.</template>
+    </v-data-table>
+
+    <v-snackbar v-model="snackbar" color="success" timeout="3000">Venue created.</v-snackbar>
   </div>
 </template>
