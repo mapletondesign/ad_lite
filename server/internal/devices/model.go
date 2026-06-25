@@ -39,6 +39,16 @@ type ImpressionRequest struct {
 }
 
 type HeartbeatResponse struct {
-	Status   string            `json:"status"`
+	Status   string             `json:"status"`
 	Playlist []scheduler.AdItem `json:"playlist"`
+}
+
+type DeviceLoginRequest struct {
+	DeviceID string `json:"device_id"`
+	Token    string `json:"token"`
+}
+
+type DeviceLoginResponse struct {
+	Token     string `json:"token"`
+	ExpiresIn int    `json:"expires_in"`
 }

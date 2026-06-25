@@ -16,10 +16,29 @@ type Service struct {
 	db         *pgxpool.Pool
 	scheduler  *scheduler.Service
 	privateKey *rsa.PrivateKey
+	publicKey  *rsa.PublicKey
 }
 
-func NewService(db *pgxpool.Pool, sched *scheduler.Service, privateKey *rsa.PrivateKey) *Service {
-	return &Service{db: db, scheduler: sched, privateKey: privateKey}
+func NewService(db *pgxpool.Pool, sched *scheduler.Service, privateKey *rsa.PrivateKey, publicKey *rsa.PublicKey) *Service {
+	return &Service{db: db, scheduler: sched, privateKey: privateKey, publicKey: publicKey}
+}
+
+func (s *Service) Login(ctx context.Context, req DeviceLoginRequest) (DeviceLoginResponse, error) {
+	claims, err := auth.VerifyTokenAllowExpired(s.publicKey, req.Token)
+	if err != nil || claims.Subject != req.DeviceID || claims.Role != "device" {
+		return DeviceLoginResponse{}, fmt.Errorf("invalid credentials")
+	}
+
+	var exists bool
+	if err := s.db.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM devices WHERE id = $1)`, req.DeviceID).Scan(&exists); err != nil || !exists {
+		return DeviceLoginResponse{}, fmt.Errorf("invalid credentials")
+	}
+
+	token, err := auth.IssueDeviceToken(s.privateKey, req.DeviceID)
+	if err != nil {
+		return DeviceLoginResponse{}, fmt.Errorf("issue token: %w", err)
+	}
+	return DeviceLoginResponse{Token: token, ExpiresIn: int(auth.DeviceTokenDuration.Seconds())}, nil
 }
 
 func (s *Service) Register(ctx context.Context, req RegisterRequest) (RegisterResponse, error) {

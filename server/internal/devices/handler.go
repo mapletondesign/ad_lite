@@ -18,6 +18,24 @@ func NewHandler(svc *Service) *Handler {
 	return &Handler{svc: svc}
 }
 
+func (h *Handler) DeviceLogin(w http.ResponseWriter, r *http.Request) {
+	var req DeviceLoginRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+	if req.DeviceID == "" || req.Token == "" {
+		writeError(w, http.StatusBadRequest, "device_id and token are required")
+		return
+	}
+	resp, err := h.svc.Login(r.Context(), req)
+	if err != nil {
+		writeError(w, http.StatusUnauthorized, "invalid credentials")
+		return
+	}
+	writeJSON(w, http.StatusOK, resp)
+}
+
 func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 	var req RegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {

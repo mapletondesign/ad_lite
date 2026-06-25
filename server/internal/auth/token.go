@@ -72,3 +72,23 @@ func VerifyToken(publicKey *rsa.PublicKey, tokenStr string) (*Claims, error) {
 	}
 	return claims, nil
 }
+
+// VerifyTokenAllowExpired verifies the RS256 signature but does not reject expired tokens.
+// Used only for device re-authentication after a long-lived token expires.
+func VerifyTokenAllowExpired(publicKey *rsa.PublicKey, tokenStr string) (*Claims, error) {
+	parser := jwt.NewParser(jwt.WithoutClaimsValidation())
+	token, err := parser.ParseWithClaims(tokenStr, &Claims{}, func(t *jwt.Token) (any, error) {
+		if _, ok := t.Method.(*jwt.SigningMethodRSA); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
+		}
+		return publicKey, nil
+	})
+	if err != nil || !token.Valid {
+		return nil, fmt.Errorf("invalid token: %w", err)
+	}
+	claims, ok := token.Claims.(*Claims)
+	if !ok {
+		return nil, fmt.Errorf("invalid claims type")
+	}
+	return claims, nil
+}

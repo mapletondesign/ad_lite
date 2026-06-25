@@ -25,7 +25,7 @@ func TestDeviceRegister(t *testing.T) {
 		`INSERT INTO venues (name) VALUES ('Reg Venue') RETURNING id`,
 	).Scan(&venueID))
 
-	svc := devices.NewService(pool, scheduler.NewService(pool, rdb), priv)
+	svc := devices.NewService(pool, scheduler.NewService(pool, rdb), priv, pub)
 
 	t.Run("creates device row and returns a signed device JWT", func(t *testing.T) {
 		resp, err := svc.Register(ctx, devices.RegisterRequest{
@@ -54,7 +54,7 @@ func TestDeviceRegister(t *testing.T) {
 
 func TestDeviceHeartbeat(t *testing.T) {
 	pool := testhelper.DB(t)
-	priv, _ := testhelper.RSAKeys(t)
+	priv, pub := testhelper.RSAKeys(t)
 	rdb := testhelper.Redis(t)
 	testhelper.TruncateAll(t, pool)
 	ctx := context.Background()
@@ -64,7 +64,7 @@ func TestDeviceHeartbeat(t *testing.T) {
 		`INSERT INTO venues (name) VALUES ('HB Venue') RETURNING id`,
 	).Scan(&venueID))
 
-	svc := devices.NewService(pool, scheduler.NewService(pool, rdb), priv)
+	svc := devices.NewService(pool, scheduler.NewService(pool, rdb), priv, pub)
 
 	resp, err := svc.Register(ctx, devices.RegisterRequest{
 		VenueID:         venueID,
@@ -107,7 +107,7 @@ func TestDeviceHeartbeat(t *testing.T) {
 
 func TestRecordImpression(t *testing.T) {
 	pool := testhelper.DB(t)
-	priv, _ := testhelper.RSAKeys(t)
+	priv, pub := testhelper.RSAKeys(t)
 	rdb := testhelper.Redis(t)
 	testhelper.TruncateAll(t, pool)
 	ctx := context.Background()
@@ -142,7 +142,7 @@ func TestRecordImpression(t *testing.T) {
 		slotID, advID,
 	).Scan(&bookingID))
 
-	svc := devices.NewService(pool, scheduler.NewService(pool, rdb), priv)
+	svc := devices.NewService(pool, scheduler.NewService(pool, rdb), priv, pub)
 
 	t.Run("impression is recorded in the database", func(t *testing.T) {
 		err := svc.RecordImpression(ctx, deviceID, devices.ImpressionRequest{BookingID: bookingID})

@@ -46,7 +46,7 @@ func NewRouter(db *pgxpool.Pool, rdb *redis.Client, privateKey *rsa.PrivateKey, 
 	advertiserHandler := advertisers.NewHandler(advertiserSvc, auditSvc)
 
 	schedSvc := scheduler.NewService(db, rdb)
-	deviceSvc := devices.NewService(db, schedSvc, privateKey)
+	deviceSvc := devices.NewService(db, schedSvc, privateKey, publicKey)
 	deviceHandler := devices.NewHandler(deviceSvc)
 
 	slotSvc := slots.NewService(db)
@@ -81,6 +81,7 @@ func NewRouter(db *pgxpool.Pool, rdb *redis.Client, privateKey *rsa.PrivateKey, 
 				r.Post("/auth/register", authHandler.Register)
 				r.Post("/auth/login", authHandler.Login)
 				r.Post("/auth/refresh", authHandler.Refresh)
+				r.Post("/auth/device/login", deviceHandler.DeviceLogin)
 			})
 
 			// Management routes — require admin JWT

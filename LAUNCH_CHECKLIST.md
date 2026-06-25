@@ -43,7 +43,7 @@ Check every item before putting real devices or advertisers on the platform. Gro
 
 ## API Completeness
 
-- [ ] `POST /auth/device/login` — device exchanges token for JWT
+- [x] `POST /auth/device/login` — device exchanges token for JWT
 - [x] `POST /auth/refresh` — refresh expired access token
 - [x] `POST /auth/register` — advertiser/venue self-registration
 - [x] `PATCH /bookings/{id}` — cancel or update a booking
