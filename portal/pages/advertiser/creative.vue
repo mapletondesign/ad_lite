@@ -23,15 +23,17 @@ async function handleUpload() {
   error.value = ''
   uploadedUrl.value = ''
 
-  const form = new FormData()
-  form.append('file', file.value)
-
   try {
-    const result = await apiFetch<{ url: string }>('/api/v1/assets/upload', {
-      method: 'POST',
-      body: form,
+    const { upload_url, public_url } = await apiFetch<{ upload_url: string; public_url: string }>(
+      `/api/v1/assets/presign?filename=${encodeURIComponent(file.value.name)}&content_type=${encodeURIComponent(file.value.type)}`
+    )
+    const res = await fetch(upload_url, {
+      method: 'PUT',
+      headers: { 'Content-Type': file.value.type },
+      body: file.value,
     })
-    uploadedUrl.value = result.url
+    if (!res.ok) throw new Error(`R2 upload failed: ${res.status}`)
+    uploadedUrl.value = public_url
     snackbar.value = true
   } catch {
     error.value = 'Upload failed. Accepted formats: JPEG, PNG, GIF, WebP, MP4, WebM.'

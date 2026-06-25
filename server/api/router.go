@@ -65,9 +65,12 @@ func NewRouter(db *pgxpool.Pool, rdb *redis.Client, privateKey *rsa.PrivateKey, 
 		if assetsSvc != nil {
 			assetsHandler := assets.NewHandler(assetsSvc)
 			r.Group(func(r chi.Router) {
-				r.Use(middleware.MaxBodySize(100 << 20))
 				r.Use(middleware.UserAuth(publicKey, "admin", "advertiser"))
-				r.Post("/assets/upload", assetsHandler.Upload)
+				r.Get("/assets/presign", assetsHandler.Presign)
+				r.Group(func(r chi.Router) {
+					r.Use(middleware.MaxBodySize(100 << 20))
+					r.Post("/assets/upload", assetsHandler.Upload)
+				})
 			})
 		}
 

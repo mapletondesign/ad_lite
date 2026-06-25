@@ -19,6 +19,33 @@ func NewHandler(svc *Service) *Handler {
 	return &Handler{svc: svc}
 }
 
+func (h *Handler) Presign(w http.ResponseWriter, r *http.Request) {
+	filename := r.URL.Query().Get("filename")
+	contentType := r.URL.Query().Get("content_type")
+	if filename == "" || contentType == "" {
+		writeError(w, http.StatusBadRequest, "filename and content_type are required")
+		return
+	}
+
+	uploadURL, publicURL, err := h.svc.PresignPut(r.Context(), filename, contentType)
+	if err != nil {
+		if isUnsupportedType(err) {
+			writeError(w, http.StatusUnsupportedMediaType, err.Error())
+			return
+		}
+		log.Printf("[%s] presign: %v", chimw.GetReqID(r.Context()), err)
+		writeError(w, http.StatusInternalServerError, "presign failed")
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]any{
+		"upload_url": uploadURL,
+		"public_url": publicURL,
+		"expires_in": 900,
+	})
+}
+
 func (h *Handler) Upload(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseMultipartForm(maxMemory); err != nil {
 		writeError(w, http.StatusBadRequest, "failed to parse multipart form")

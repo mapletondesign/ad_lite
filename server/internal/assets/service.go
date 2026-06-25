@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -69,6 +70,33 @@ func NewService(ctx context.Context) (*Service, error) {
 		bucket:     bucket,
 		cdnBaseURL: strings.TrimRight(cdnBaseURL, "/"),
 	}, nil
+}
+
+func (s *Service) PresignPut(ctx context.Context, filename, contentType string) (uploadURL, publicURL string, err error) {
+	ext, ok := allowedTypes[contentType]
+	if !ok {
+		return "", "", fmt.Errorf("unsupported content type: %s", contentType)
+	}
+
+	key := "creatives/" + uuid.New().String() + ext
+	presignClient := s3.NewPresignClient(s.client)
+	req, err := presignClient.PresignPutObject(ctx, &s3.PutObjectInput{
+		Bucket:      aws.String(s.bucket),
+		Key:         aws.String(key),
+		ContentType: aws.String(contentType),
+	}, s3.WithPresignExpires(15*time.Minute))
+	if err != nil {
+		return "", "", fmt.Errorf("presign: %w", err)
+	}
+	return req.URL, s.cdnBaseURL + "/" + key, nil
+}
+
+func (s *Service) Delete(ctx context.Context, key string) error {
+	_, err := s.client.DeleteObject(ctx, &s3.DeleteObjectInput{
+		Bucket: aws.String(s.bucket),
+		Key:    aws.String(key),
+	})
+	return err
 }
 
 func (s *Service) Upload(ctx context.Context, contentType string, body io.Reader, size int64) (string, error) {

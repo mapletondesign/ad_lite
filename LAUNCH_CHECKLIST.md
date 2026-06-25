@@ -27,8 +27,8 @@ Check every item before putting real devices or advertisers on the platform. Gro
 
 ## Infrastructure — Critical (blocking)
 
-- [ ] Move ad creative serving to S3/Cloudflare R2 + CDN — remove local filesystem serving
-- [ ] Implement presigned S3 upload URLs — clients never receive S3 credentials directly
+- [x] Move ad creative serving to S3/Cloudflare R2 + CDN — remove local filesystem serving
+- [x] Implement presigned S3 upload URLs — clients never receive S3 credentials directly
 - [x] Cache playlist results in Redis per device (TTL ~60s)
 - [ ] Deploy behind HTTPS — enforce `Strict-Transport-Security`
 - [ ] Move secrets to a secrets manager or CI environment variables (not `.env` files in production)
