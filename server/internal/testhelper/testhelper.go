@@ -72,25 +72,28 @@ func RSAKeys(t *testing.T) (*rsa.PrivateKey, *rsa.PublicKey) {
 func TruncateAll(t *testing.T, pool *pgxpool.Pool) {
 	t.Helper()
 	_, err := pool.Exec(context.Background(), `
-		TRUNCATE impressions, refresh_tokens, users, bookings, ad_slots, advertisers, devices, venues CASCADE
+		TRUNCATE admin_audit_log, impressions, refresh_tokens, users, bookings, ad_slots, advertisers, devices, venues CASCADE
 	`)
 	if err != nil {
 		t.Fatalf("truncate tables: %v", err)
 	}
 }
 
-// runMigrations applies all SQL migration files in lexicographic order.
-// Skips if the schema is already present (idempotent across test runs).
+// runMigrations applies any unapplied SQL migration files in lexicographic order.
+// Uses a schema_migrations table to track what has already been applied, so
+// new migrations added after the test DB was first created are picked up
+// automatically on the next test run.
 func runMigrations(t *testing.T, pool *pgxpool.Pool) {
 	t.Helper()
 	ctx := context.Background()
 
-	var exists bool
-	_ = pool.QueryRow(ctx,
-		`SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'venues')`,
-	).Scan(&exists)
-	if exists {
-		return
+	if _, err := pool.Exec(ctx, `
+		CREATE TABLE IF NOT EXISTS schema_migrations (
+			filename   TEXT        PRIMARY KEY,
+			applied_at TIMESTAMPTZ NOT NULL DEFAULT now()
+		)`,
+	); err != nil {
+		t.Fatalf("create schema_migrations: %v", err)
 	}
 
 	_, file, _, _ := runtime.Caller(0)
@@ -104,18 +107,34 @@ func runMigrations(t *testing.T, pool *pgxpool.Pool) {
 	var sqlFiles []string
 	for _, e := range entries {
 		if !e.IsDir() && strings.HasSuffix(e.Name(), ".sql") {
-			sqlFiles = append(sqlFiles, filepath.Join(migrationsDir, e.Name()))
+			sqlFiles = append(sqlFiles, e.Name())
 		}
 	}
 	sort.Strings(sqlFiles)
 
-	for _, path := range sqlFiles {
-		sql, err := os.ReadFile(path)
+	for _, name := range sqlFiles {
+		var applied bool
+		_ = pool.QueryRow(ctx,
+			`SELECT EXISTS(SELECT 1 FROM schema_migrations WHERE filename = $1)`, name,
+		).Scan(&applied)
+		if applied {
+			continue
+		}
+		sql, err := os.ReadFile(filepath.Join(migrationsDir, name))
 		if err != nil {
-			t.Fatalf("read migration %s: %v", path, err)
+			t.Fatalf("read migration %s: %v", name, err)
 		}
 		if _, err := pool.Exec(ctx, string(sql)); err != nil {
-			t.Fatalf("apply migration %s: %v", path, err)
+			// "already exists" means the migration ran before the tracker was
+			// introduced — treat it as applied rather than failing.
+			if !strings.Contains(err.Error(), "already exists") {
+				t.Fatalf("apply migration %s: %v", name, err)
+			}
+		}
+		if _, err := pool.Exec(ctx,
+			`INSERT INTO schema_migrations (filename) VALUES ($1)`, name,
+		); err != nil {
+			t.Fatalf("record migration %s: %v", name, err)
 		}
 	}
 }
