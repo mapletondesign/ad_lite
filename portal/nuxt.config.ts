@@ -1,5 +1,11 @@
 export default defineNuxtConfig({
   ssr: false,
+
+  app: {
+    head: {
+      link: [{ rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
+    },
+  },
   modules: ['@pinia/nuxt', 'vuetify-nuxt-module'],
 
   vuetify: {
